@@ -24,6 +24,16 @@ As regiões e cidades de cada estado ficam em `scripts/rede/estados.yaml`; as
 coordenadas e o fuso vêm do cadastro do IBGE. O repositório gerado traz um README
 com o passo a passo para colocar o canal no ar.
 
+## Comunicados em dupla (sob pedido)
+
+Além dos Reels diários, o motor faz **Reels avulsos com Bira e Bia
+conversando**, só quando alguém pede: alerta de tempo (tempestade, granizo,
+vendaval, calor), agenda de eventos e divulgação, ou lembretes. O conteúdo vem
+de um roteiro YAML em `comunicados/`. Os exemplos e o passo a passo estão em
+[`comunicados/README.md`](comunicados/README.md), e o disparo é feito em
+**Actions → Comunicado em dupla** (por padrão só gera o vídeo; marque
+"publicar" para ir ao Instagram).
+
 ## Fonte de dados
 
 [MET Norway](https://api.met.no), gratuita e liberada para uso comercial
