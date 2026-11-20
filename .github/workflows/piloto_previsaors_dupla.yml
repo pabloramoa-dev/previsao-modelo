@@ -44,8 +44,19 @@ jobs:
           python hyperframes/comunicado_dupla.py output/piloto_rs.yaml --so-validar
       - name: Renderizar Bia e Bira com HyperFrames e Kokoro
         run: python hyperframes/comunicado_dupla.py output/piloto_rs.yaml --out output/PREVISAO_RS_BIA_BIRA.mp4 --qualidade standard
-      - name: QA de vídeo
-        run: python scripts/qa_video.py output/PREVISAO_RS_BIA_BIRA.mp4
+      - name: QA do piloto em dupla (duracao ate 180s)
+        run: |
+          python - <<'PY'
+          import json, subprocess
+          p='output/PREVISAO_RS_BIA_BIRA.mp4'
+          data=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-show_format','-of','json',p]))
+          v=next(s for s in data['streams'] if s.get('codec_type')=='video')
+          aud=next(s for s in data['streams'] if s.get('codec_type')=='audio')
+          dur=float(data['format']['duration'])
+          assert v['codec_name']=='h264' and int(v['width'])==1080 and int(v['height'])==1920
+          assert 12<=dur<=180 and aud['codec_name'] in ('aac','mp3')
+          print('Piloto Bia/Bira validado:',round(dur,1),'segundos')
+          PY
       - name: Entregar artefatos (nunca publicar)
         uses: actions/upload-artifact@v4
         with:
