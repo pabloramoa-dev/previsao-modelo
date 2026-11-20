@@ -1,85 +1,215 @@
-# Identidade do canal. E o UNICO arquivo, junto com locais.yaml, que muda de um
-# estado para outro. Gerado por scripts/novo_estado.py; pode ser editado a mao.
-# Este e o estado de referencia do modelo (o canal que deu origem ao motor).
-versao: 1
-uf: RJ
-nome: "Rio de Janeiro"
-curto: "Rio"              # como o roteiro chama o lugar
-artigo: "o"               # o / a / os / as / "" -> "no Rio", "na Bahia", "em Minas"
-regiao_id: rio_metropolitano
-marca: "PREVISÃO RJ"
-marca_falada: "Previsão RJ"
-handle: previsaorj        # sem arroba, minusculas
-slogan: "O tempo do Rio para decidir seu dia."
-repo: "pabloramoa-dev/previsao-rj"
-
-fuso_utc: -3              # tem de ser igual ao FUSO_UTC dos workflows
-timezone: "America/Sao_Paulo"
-
-# Ponto fora deste retangulo e erro de cadastro e derruba a carga.
-recorte: {lat_min: -23.15, lat_max: -22.60, lon_min: -43.80, lon_max: -42.95}
-
-litoral: true             # false desliga o formato "vai dar praia" e a coleta de mar
-cenario: rio              # desenho do telao em hyperframes/cenarios.py
-
-titulos:
-  antes_de_sair: "RIO ANTES DE SAIR"
-  amanha_no_estado: "AMANHÃ NO RIO"
-
-apresentadores:
-  bira: {cargo: "TEMPO NO RIO E REGIÃO"}
-  bia: {cargo: "O TEMPO DE AMANHÃ NO RIO"}
-
-hashtags:
-  padrao: "#PrevisaoRJ #RioDeJaneiro #TempoRJ"
-  antes_de_sair: "#PrevisaoRJ #RioDeJaneiro #TempoRJ"
-  chove_onde: "#PrevisaoRJ #ChuvaNoRio #TempoRJ"
-  fim_de_semana: "#PrevisaoRJ #FimDeSemana #RioDeJaneiro"
-  vai_dar_praia: "#PrevisaoRJ #PraiaNoRio #RioDeJaneiro"
-  vai_ao_jogo: "#PrevisaoRJ #RioDeJaneiro #TempoRJ"
-  amanha_no_estado: "#PrevisaoRJ #TempoAmanha #RioDeJaneiro"
-
-legenda:
-  abrangencia: "no Rio, Niterói e Baixada"   # "Seu fim de semana ..."
-  unidade: "bairro"                           # "muda de bairro para bairro"
-
-# As seis linhas do quadro de todo Reel. `ids` em ordem de preferencia;
-# `zonas` e a reserva quando nenhum id preferido veio na coleta.
-regioes:
-  - rotulo: "Niterói"
-    ids: [icarai, niteroi_centro, piratininga, sao_francisco, charitas, camboinhas, itaipu, itacoatiara]
-    zonas: [niteroi_baia, niteroi_oceanica]
-  - rotulo: "Centro do Rio"
-    ids: [centro_rio, lapa, gloria, saude_gamboa]
-    zonas: [centro]
-  - rotulo: "Zona Sul"
-    ids: [copacabana, ipanema, botafogo, flamengo, leblon, urca]
-    zonas: [zona_sul]
-  - rotulo: "Zona Norte"
-    ids: [meier, madureira, iraja, penha, ilha_do_governador]
-    zonas: [zona_norte]
-  - rotulo: "Baixada"
-    ids: [duque_de_caxias, nova_iguacu, sao_joao_de_meriti, belford_roxo, nilopolis, mesquita]
-    zonas: [baixada]
-  - rotulo: "Campo Grande"
-    ids: [campo_grande]
-    zonas: []
-
-# Na fala, o nome curto: o cartao ja mostra o rotulo completo.
-falado:
-  "Centro do Rio": "Centro"
-
-# Lugar que pede artigo. Nome fora das listas fica com "em".
-preposicoes:
-  "na": ["Barra da Tijuca", "Tijuca", "Glória", "Lapa", "Penha", "Urca",
-       "Ilha do Governador", "Freguesia", "Taquara", "Vila Isabel", "Saúde e Gamboa"]
-  "no": ["Centro", "Centro de Niterói", "Méier", "Maracanã", "Flamengo", "Leblon",
-       "Grajaú", "Joá", "Pechincha", "Recreio dos Bandeirantes", "Recreio",
-       "Alto da Boa Vista", "Nilton Santos", "Rio", "Rio de Janeiro"]
-  "nas": ["Barcas - Niterói", "Barcas - Praça XV"]
-  "nos": []
-
-# Gancho hiperlocal por dia da semana de publicacao (0 = segunda). Opcional.
-destaques_semana:
-  - {dias: [0, 3], id: sao_goncalo, onde: "em São Gonçalo", selo: "SÃO GONÇALO"}
-  - {dias: [1, 5], id: icarai, onde: "em Icaraí, Niterói", selo: "ICARAÍ · NITERÓI"}
+# Identidade estadual @previsaors
+{
+  "versao": 1,
+  "uf": "RS",
+  "nome": "Rio Grande do Sul",
+  "curto": "Rio Grande do Sul",
+  "artigo": "o",
+  "regiao_id": "estado_rs",
+  "marca": "PREVISÃO RS",
+  "marca_falada": "Previsão RS",
+  "handle": "previsaors",
+  "slogan": "O tempo do Rio Grande do Sul para decidir seu dia.",
+  "repo": "pabloramoa-dev/previsao-rs",
+  "fuso_utc": -3,
+  "timezone": "America/Sao_Paulo",
+  "recorte": {
+    "lat_min": -33.986599999999996,
+    "lat_max": -26.860699999999998,
+    "lon_min": -57.8497,
+    "lon_max": -49.4333
+  },
+  "litoral": true,
+  "cenario": "rio_grande_do_sul",
+  "ticker": "RS",
+  "titulos": {
+    "antes_de_sair": "RS ANTES DE SAIR",
+    "amanha_no_estado": "AMANHÃ NO RIO GRANDE DO SUL"
+  },
+  "apresentadores": {
+    "bira": {
+      "cargo": "TEMPO NO RS"
+    },
+    "bia": {
+      "cargo": "O TEMPO DE AMANHÃ · RS"
+    }
+  },
+  "hashtags": {
+    "padrao": "#PrevisaoRS #RioGrandeDoSul #TempoRS",
+    "antes_de_sair": "#PrevisaoRS #RioGrandeDoSul #TempoRS",
+    "chove_onde": "#PrevisaoRS #ChuvaRS #TempoRS",
+    "fim_de_semana": "#PrevisaoRS #FimDeSemana #RioGrandeDoSul",
+    "vai_dar_praia": "#PrevisaoRS #LitoralGaucho #TempoRS",
+    "vai_ao_jogo": "#PrevisaoRS #RioGrandeDoSul #TempoRS",
+    "amanha_no_estado": "#PrevisaoRS #TempoAmanha #RioGrandeDoSul"
+  },
+  "legenda": {
+    "abrangencia": "no Rio Grande do Sul",
+    "unidade": "cidade"
+  },
+  "formatos_desligados": [
+    "vai_ao_jogo"
+  ],
+  "regioes": [
+    {
+      "rotulo": "Metropolitana e Vales",
+      "ids": [
+        "porto_alegre",
+        "canoas",
+        "novo_hamburgo",
+        "sao_leopoldo",
+        "guaiba",
+        "lajeado",
+        "estrela",
+        "encantado",
+        "montenegro"
+      ],
+      "zonas": [
+        "z_metropolitana_e_vales"
+      ]
+    },
+    {
+      "rotulo": "Serra e Campos de Cima",
+      "ids": [
+        "caxias_do_sul",
+        "gramado",
+        "bento_goncalves",
+        "vacaria",
+        "sao_jose_dos_ausentes",
+        "farroupilha"
+      ],
+      "zonas": [
+        "z_serra_e_campos_de_cima"
+      ]
+    },
+    {
+      "rotulo": "Litoral Norte",
+      "ids": [
+        "tramandai",
+        "torres",
+        "capao_da_canoa",
+        "osorio",
+        "imbe"
+      ],
+      "zonas": [
+        "z_litoral_norte"
+      ]
+    },
+    {
+      "rotulo": "Sul e Campanha",
+      "ids": [
+        "pelotas",
+        "rio_grande",
+        "bage",
+        "sant_ana_do_livramento",
+        "santa_vitoria_do_palmar",
+        "cangucu"
+      ],
+      "zonas": [
+        "z_sul_e_campanha"
+      ]
+    },
+    {
+      "rotulo": "Centro e Fronteira",
+      "ids": [
+        "santa_maria",
+        "santa_cruz_do_sul",
+        "cachoeira_do_sul",
+        "venancio_aires",
+        "uruguaiana",
+        "alegrete",
+        "sao_borja"
+      ],
+      "zonas": [
+        "z_centro_e_fronteira"
+      ]
+    },
+    {
+      "rotulo": "Norte e Noroeste",
+      "ids": [
+        "passo_fundo",
+        "erechim",
+        "ijui",
+        "santo_angelo",
+        "santa_rosa",
+        "cruz_alta"
+      ],
+      "zonas": [
+        "z_norte_e_noroeste"
+      ]
+    }
+  ],
+  "falado": {
+    "Metropolitana e Vales": "Grande Porto Alegre",
+    "Serra e Campos de Cima": "Serra",
+    "Centro e Fronteira": "Centro e Oeste",
+    "Norte e Noroeste": "Norte"
+  },
+  "preposicoes": {
+    "na": [
+      "Serra",
+      "Campanha"
+    ],
+    "no": [
+      "Rio Grande do Sul",
+      "Litoral Norte",
+      "Vale do Taquari",
+      "Vale dos Sinos"
+    ],
+    "nas": [],
+    "nos": [
+      "Campos de Cima da Serra"
+    ]
+  },
+  "destaques_semana": [
+    {
+      "dias": [
+        0
+      ],
+      "id": "porto_alegre",
+      "onde": "em Porto Alegre",
+      "selo": "PORTO ALEGRE"
+    },
+    {
+      "dias": [
+        1
+      ],
+      "id": "caxias_do_sul",
+      "onde": "em Caxias do Sul",
+      "selo": "SERRA"
+    },
+    {
+      "dias": [
+        2
+      ],
+      "id": "tramandai",
+      "onde": "em Tramandaí",
+      "selo": "LITORAL"
+    },
+    {
+      "dias": [
+        3
+      ],
+      "id": "pelotas",
+      "onde": "em Pelotas",
+      "selo": "SUL"
+    },
+    {
+      "dias": [
+        4
+      ],
+      "id": "santa_maria",
+      "onde": "em Santa Maria",
+      "selo": "CENTRO"
+    },
+    {
+      "dias": [
+        5,
+        6
+      ],
+      "id": "passo_fundo",
+      "onde": "em Passo Fundo",
+      "selo": "NORTE"
+    }
+  ]
+}

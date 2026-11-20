@@ -1,53 +1,35 @@
-# previsao-modelo
+# Previsão RS — @previsaors
 
-Modelo dos canais de previsão do tempo por estado. É o motor do @previsaorj
-(Bira às 6h com a previsão de hoje, Bia às 18h com a de amanhã, vozes Kokoro,
-estúdio HyperFrames, publicação automática no Instagram), com tudo que é próprio
-de um canal tirado do código e posto em dois arquivos:
+Motor meteorológico baseado no repositório `pabloramoa-dev/previsao-modelo`. Nome do repositório independente previsto: `pabloramoa-dev/previsao-rs`.
 
-- `config/estado.yaml` — nome, @, fuso, títulos, hashtags, cenário e as seis
-  regiões do quadro;
-- `config/locais.yaml` — municípios e pontos de coleta.
+**Reels:** Bira às 06h para hoje e Bia às 18h para amanhã, horário de Brasília/RS (`America/Sao_Paulo`). Estúdio HyperFrames vertical, vozes Kokoro, 6 regiões no quadro, chuva em milímetros e maior evento destacado sem inventar dados. Os ganchos alternam entre âncoras ao longo da semana. Os outros municípios são reservas editoriais (tier 2).
 
-Este repositório não publica nada: serve de origem para os repositórios dos estados.
-A configuração dele é a do estado de referência, e os testes rodam sobre ela.
+| Região | Âncora | Outras localidades |
+|---|---|---|
+| Metropolitana e Vales | Porto Alegre | Canoas, Novo Hamburgo, São Leopoldo, Guaíba, Lajeado, Estrela, Encantado, Montenegro |
+| Serra e Campos de Cima | Caxias do Sul | Gramado, Bento Gonçalves, Vacaria, São José dos Ausentes, Farroupilha |
+| Litoral Norte | Tramandaí | Torres, Capão da Canoa, Osório, Imbé |
+| Sul e Campanha | Pelotas | Rio Grande, Bagé, Sant'Ana do Livramento, Santa Vitória do Palmar, Canguçu |
+| Centro e Fronteira | Santa Maria | Santa Cruz do Sul, Cachoeira do Sul, Venâncio Aires, Uruguaiana, Alegrete, São Borja |
+| Norte e Noroeste | Passo Fundo | Erechim, Ijuí, Santo Ângelo, Santa Rosa, Cruz Alta |
 
-## Gerar um estado
+## Peculiaridades do estado
+- Serra e Campos de Cima: frio, geada, nevoeiro e possibilidade de neve **somente com evidência**.
+- Vales do Taquari, Caí, Sinos, Jacuí e Rio Uruguai, além do Guaíba: acompanhar níveis hidrológicos oficiais; **mm previstos não equivalem a enchentes confirmadas**.
+- Litoral: vento, ressaca e condições marítimas; não inventar altura de ondas com coleta marítima desabilitada.
+- Campanha, Fronteira Oeste e Noroeste: temporais, granizo, calor e estiagem conforme a fonte e a estação do ano.
+- Frentes frias e ciclones extratropicais: destacar município, faixa horária, incerteza e validade; evitar sensacionalismo.
 
-```bash
-pip install -r requirements/test.txt
-python -m scripts.novo_estado PR --destino ../previsao-pr
-cd ../previsao-pr && python -m pytest -q
-```
+Fontes: [MET Norway](https://api.met.no) para previsão (crédito e licença CC BY 4.0); [INMET](https://avisos.inmet.gov.br/), [Defesa Civil RS](https://www.defesacivil.rs.gov.br/avisos-e-boletins), [ClimaRS](https://clima.rs.gov.br/) para avisos e monitoramento oficial.
 
-As regiões e cidades de cada estado ficam em `scripts/rede/estados.yaml`; as
-coordenadas e o fuso vêm do cadastro do IBGE. O repositório gerado traz um README
-com o passo a passo para colocar o canal no ar.
+## Monitor às 14h
+`monitor_alertas_rs.yml` roda todos os dias às 17:00 UTC = 14:00 no RS e consulta avisos ativos do INMET. Seleciona municípios com geocodes IBGE 43, valida vigência, deduplica e produz JSON e resumo. **Não publica automaticamente**, pois a conta @previsaors ainda não está integrada e os avisos da Defesa Civil/níveis dos rios exigem confirmação separada.
 
-## Comunicados em dupla (sob pedido)
+## Ativação do novo repositório
+1. Criar `pabloramoa-dev/previsao-rs` e importar esta árvore da branch preparada.
+2. Em Actions, rodar CI, coleta e validação do estúdio (sem publicar) e conferir os MP4.
+3. Criar/conectar Instagram profissional `@previsaors`; definir variable `EXPECTED_IG_USERNAME=previsaors` e secrets `IG_USER_ID`, `IG_ACCESS_TOKEN`, `GH_PAT_SECRETS` exclusivos do canal.
+4. Só depois de validação e publicação manual usar `AUTOMATION_ENABLED=true`.
+5. Se usar cron-job.org como gatilho principal, despachar `reel_manha` às 05h35 e `reel_noite` às 17h35 no fuso local. O GitHub possui gatilhos de reserva.
 
-Além dos Reels diários, o motor faz **Reels avulsos com Bira e Bia
-conversando**, só quando alguém pede: alerta de tempo (tempestade, granizo,
-vendaval, calor), agenda de eventos e divulgação, ou lembretes. O conteúdo vem
-de um roteiro YAML em `comunicados/`. Os exemplos e o passo a passo estão em
-[`comunicados/README.md`](comunicados/README.md), e o disparo é feito em
-**Actions → Comunicado em dupla** (por padrão só gera o vídeo; marque
-"publicar" para ir ao Instagram).
-
-## Fonte de dados
-
-[MET Norway](https://api.met.no), gratuita e liberada para uso comercial
-(CC BY 4.0). Toda legenda credita a fonte e a licença, e as requisições se
-identificam com o @ e o repositório do canal. A MET Norway não fornece
-probabilidade de chuva nem rajada para o Brasil, então o Reel fala de
-milímetros previstos, horário da chuva e vento médio. O Open-Meteo continua no
-código, desligado em `config/fontes.yaml`.
-
-## Verificações
-
-| Comando | O que confere |
-| --- | --- |
-| `python -m pytest -q` | motor, roteiro, legenda, horários e o gerador dos 24 estados |
-| `python -m scripts.validar_estado` | coerência de `estado.yaml`, `locais.yaml` e workflows |
-| `python scripts/isolation_guard.py` | nenhum identificador de outro canal no código |
-| `python -m scripts.sincronizar_marca --check` | card "Seguir", avatar e `brand.yml` com a marca do canal |
+Nunca reutilizar credenciais Meta de outro canal.

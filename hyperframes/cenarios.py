@@ -101,7 +101,22 @@ def parana(*, morro, mar, uid, rng, pt, red):
  {canteiros}'''
 
 
-CENARIOS = {'rio': rio, 'litoral': litoral, 'interior': interior, 'parana': parana}
+
+def rio_grande_do_sul(*, morro, mar, uid, rng, pt, red):
+    """Guaíba, Gasômetro, pampas e araucárias (ilustração estilizada)."""
+    arvores = ''.join(
+        f'<g transform="translate({x},1250)"><rect x="-8" y="-160" width="16" height="170" fill="#74513b" stroke="{pt}" stroke-width="4"/>'
+        f'<path d="M-65 -145 Q0 -210 65 -145 Q0 -120 -65 -145 Z" fill="{morro}" stroke="{pt}" stroke-width="5"/></g>'
+        for x in (140,930))
+    gasometro=(f'<rect x="475" y="1045" width="145" height="225" fill="#d7c7ae" stroke="{pt}" stroke-width="6"/>'
+               f'<rect x="550" y="890" width="24" height="155" fill="#b58d77" stroke="{pt}" stroke-width="6"/>')
+    return (f'<path d="M-20 1260 Q300 1080 560 1220 T1100 1170 L1100 1300 L-20 1300 Z" fill="{morro}"/>'
+            + _predios(rng, pt, base=1270, alt=(70,150)) + arvores + gasometro
+            + f'<rect x="0" y="1270" width="1080" height="140" fill="{mar}"/>'
+            + f'<path class="{uid}-mar" d="M-60 1335 q30 -12 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0" stroke="#ddf0f5" fill="none" stroke-width="5"/>'
+            + f'<rect x="0" y="1410" width="1080" height="510" fill="#e8d9b7"/>')
+
+CENARIOS = {'rio': rio, 'litoral': litoral, 'interior': interior, 'parana': parana, 'rio_grande_do_sul': rio_grande_do_sul}
 
 
 def desenhar(nome, **cores):
