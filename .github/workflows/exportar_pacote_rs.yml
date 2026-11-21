@@ -5,6 +5,8 @@ on:
     branches: [canal/previsao-rs]
     paths:
       - '.github/workflows/exportar_pacote_rs.yml'
+      - 'scripts/roteiro_piloto_dupla_rs.py'
+      - 'tests/test_roteiro_rs_direto.py'
 permissions:
   contents: read
 jobs:
@@ -12,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: canal/previsao-rs
       - name: Gerar arquivo ZIP sem histórico, tokens ou secrets
         run: |
           mkdir -p exportacao
