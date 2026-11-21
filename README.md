@@ -13,6 +13,12 @@ Motor meteorológico baseado no repositório `pabloramoa-dev/previsao-modelo`. N
 | Centro e Fronteira | Santa Maria | Santa Cruz do Sul, Cachoeira do Sul, Venâncio Aires, Uruguaiana, Alegrete, São Borja |
 | Norte e Noroeste | Passo Fundo | Erechim, Ijuí, Santo Ângelo, Santa Rosa, Cruz Alta |
 
+## Abertura curta e dupla de apresentadores
+
+O roteiro `scripts/roteiro_piloto_dupla_rs.py` começa **na primeira frase com a previsão de Porto Alegre**: mínima, máxima e volume previsto de chuva. Não há saudação, apresentação dos nomes ou explicação das fontes no áudio. Bia e Bira alternam as seis regiões; a fonte aparece no card e na legenda. O destaque de chuva só entra quando o valor justifica. `comunicado_dupla.py` usa vozes Kokoro, lip sync, cenários, animações e efeitos HyperFrames, sem publicar.
+
+Renderização: Actions → **Piloto RS - Bia e Bira - real - sem publicar** → Run workflow. O MP4 sai como artifact. As verificações de dados recusam números faltantes e previsões antigas.
+
 ## Peculiaridades do estado
 - Serra e Campos de Cima: frio, geada, nevoeiro e possibilidade de neve **somente com evidência**.
 - Vales do Taquari, Caí, Sinos, Jacuí e Rio Uruguai, além do Guaíba: acompanhar níveis hidrológicos oficiais; **mm previstos não equivalem a enchentes confirmadas**.
@@ -26,7 +32,8 @@ Fontes: [MET Norway](https://api.met.no) para previsão (crédito e licença CC 
 `monitor_alertas_rs.yml` roda todos os dias às 17:00 UTC = 14:00 no RS e consulta avisos ativos do INMET. Seleciona municípios com geocodes IBGE 43, valida vigência, deduplica e produz JSON e resumo. **Não publica automaticamente**, pois a conta @previsaors ainda não está integrada e os avisos da Defesa Civil/níveis dos rios exigem confirmação separada.
 
 ## Ativação do novo repositório
-1. Criar `pabloramoa-dev/previsao-rs` e importar esta árvore da branch preparada.
+1. Criar **repositório vazio e exclusivo** `pabloramoa-dev/previsao-rs` (sem README inicial), preferencialmente privado. Importar somente a branch `canal/previsao-rs` preparada em `previsao-modelo`, tornando-a `main` do novo repositório. Não unir o RS à `main` do modelo.
+   No terminal: `git clone -b canal/previsao-rs --single-branch https://github.com/pabloramoa-dev/previsao-modelo.git previsao-rs && cd previsao-rs && git remote remove origin && git branch -M main && git remote add origin https://github.com/pabloramoa-dev/previsao-rs.git && git push -u origin main`. Em alternativa, baixe o arquivo gerado em Actions → **Exportar pacote independente RS**.
 2. Em Actions, rodar CI, coleta e validação do estúdio (sem publicar) e conferir os MP4.
 3. Criar/conectar Instagram profissional `@previsaors`; definir variable `EXPECTED_IG_USERNAME=previsaors` e secrets `IG_USER_ID`, `IG_ACCESS_TOKEN`, `GH_PAT_SECRETS` exclusivos do canal.
 4. Só depois de validação e publicação manual usar `AUTOMATION_ENABLED=true`.
