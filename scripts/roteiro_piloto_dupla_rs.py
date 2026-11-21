@@ -39,32 +39,33 @@ def montar(snapshot, saida):
         cidades.append(dict(regiao=regiao,nome=l["name"],
                            mi=round(float(l["min_c"])),ma=round(float(l["max_c"])),
                            mm=round(float(l["rain_mm"]),1)))
+
     nome_dia=["segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado","domingo"][data.weekday()]
-    data_fala=f"{nome_dia}, dia {data.day} de novembro"
-    falas=[
-      {"cena":"abertura","quem":"bia",
-       "fala":f"Olá, gaúchos! Eu sou a Bia. Confira a previsão para {data_fala}, com dados atualizados do serviço meteorológico MET Norway."},
-      {"cena":"frase","quem":"bira",
-       "fala":"E eu sou o Bira! Vamos percorrer seis regiões do Rio Grande do Sul. Na tela, temperaturas e chuva prevista em milímetros."}
-    ]
+    # A primeira frase JÁ é previsão; nada de "olá", nomes ou explicação do canal.
+    # A estética de abertura do HyperFrames permanece, mas com informação útil.
+    falas=[]
     for i,c in enumerate(cidades):
         mm=c["mm"]
-        q="Sem chuva significativa prevista." if mm<0.5 else f"Volume previsto de {mm:g} milímetros de chuva."
-        falas.append({"cena":"numero","quem":"bia" if i%2==0 else "bira",
-          "icone":"chuva" if mm >= 0.5 else "sol",
-          "numero":f'{c["ma"]}°C',"sub":c["nome"].upper(),
-          "local":f'MÍN {c["mi"]}°C  ·  CHUVA {mm:g} mm',
-          "fala":f'Em {c["nome"]}, mínima de {c["mi"]} e máxima de {c["ma"]} graus. {q}'})
+        chuva = (f"{mm:g} milímetros de chuva" if mm>=0.5
+                 else "sem chuva significativa")
+        falas.append({
+            "cena":"abertura" if i == 0 else "numero",
+            "quem":"bia" if i%2==0 else "bira",
+            "icone":"chuva" if mm>=0.5 else "sol",
+            "numero":f'{c["ma"]}°C',
+            "sub":c["nome"].upper(),
+            "local":f'MÍN {c["mi"]}°C · CHUVA {mm:g} mm',
+            "fala":f'{c["nome"]}: de {c["mi"]} a {c["ma"]} graus, {chuva}.'
+        })
     destaque=max(cidades,key=lambda c:c["mm"])
     if destaque["mm"]>=1:
-        falas.append({"cena":"frase","quem":"bia",
-          "fala":f'O maior volume de chuva entre esses seis pontos foi previsto para {destaque["nome"]}, com cerca de {destaque["mm"]:g} milímetros. Não é um alerta oficial de temporal.'})
-    else:
-        falas.append({"cena":"frase","quem":"bia",
-          "fala":"Esses são acumulados previstos, e não chuva já observada. A situação pode mudar nas próximas atualizações."})
-    falas.append({"cena":"cta","quem":"bira","chamada":"COMPARTILHE A PREVISÃO",
-      "sub":"@previsaors · Rio Grande do Sul",
-      "fala":"Salve a previsão e mande para quem mora no Rio Grande do Sul. Siga o Previsão RS!"})
+        falas.append({
+            "cena":"frase","quem":"bia",
+            "fala":f'Maior chuva entre esses pontos: {destaque["nome"]}, {destaque["mm"]:g} milímetros previstos.'
+        })
+    falas.append({"cena":"cta","quem":"bira","chamada":"PREVISÃO RS",
+                  "sub":"@previsaors · Rio Grande do Sul",
+                  "fala":"Compartilhe esta previsão e siga o Previsão RS!"})
     titulo="PREVISÃO DO RS"
     report=f"Previsão para {data.isoformat()} • atualização {agora:%d/%m/%Y %H:%M}\n"
     report+="Fonte: MET Norway, previsão por ponto; não é aviso oficial de tempo severo\n"
