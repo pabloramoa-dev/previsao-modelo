@@ -60,8 +60,15 @@ def subscribe_accounts():
             if response.ok and response.json().get("success", True):
                 app.logger.warning("Assinatura Meta confirmada para %s", handle)
             else:
-                app.logger.warning("Assinatura Meta recusada para %s: HTTP %s",
-                                   handle, response.status_code)
+                # Registrar apenas os codigos de erro, nunca tokens ou corpos completos.
+                try:
+                    meta_error = (response.json().get("error") or {})
+                except ValueError:
+                    meta_error = {}
+                app.logger.warning(
+                    "Assinatura Meta recusada para %s: HTTP %s, codigo=%s, subcodigo=%s, tipo=%s",
+                    handle, response.status_code, meta_error.get("code"),
+                    meta_error.get("error_subcode"), meta_error.get("type"))
         except (requests.RequestException, ValueError) as error:
             app.logger.warning("Falha na assinatura Meta para %s: %s",
                                handle, type(error).__name__)
