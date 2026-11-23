@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
-from threading import BoundedSemaphore, Lock
+from threading import BoundedSemaphore, Lock, Thread
 from time import monotonic
 from zoneinfo import ZoneInfo
 
@@ -41,6 +41,38 @@ HANDLES_BY_ID = {a.instagram_id: handle for handle, a in ACCOUNTS.items()}
 
 TIME_ZONE = ZoneInfo("America/Sao_Paulo")
 GRAPH = "https://graph.instagram.com/" + os.getenv("META_GRAPH_VERSION", "v27.0")
+
+
+def subscribe_accounts():
+    """Inscreve cada conta nos eventos da Meta, sem expor credenciais."""
+    for handle, account in ACCOUNTS.items():
+        if not all((account.instagram_id, account.access_token, account.app_secret,
+                    account.verify_token)):
+            app.logger.warning("Perfil %s com credenciais incompletas", handle)
+            continue
+        try:
+            response = requests.post(
+                GRAPH + "/me/subscribed_apps",
+                params={"subscribed_fields": "comments,messages",
+                        "access_token": account.access_token},
+                timeout=10,
+            )
+            if response.ok and response.json().get("success", True):
+                app.logger.warning("Assinatura Meta confirmada para %s", handle)
+            else:
+                app.logger.warning("Assinatura Meta recusada para %s: HTTP %s",
+                                   handle, response.status_code)
+        except (requests.RequestException, ValueError) as error:
+            app.logger.warning("Falha na assinatura Meta para %s: %s",
+                               handle, type(error).__name__)
+
+
+app.logger.warning("Atendimento iniciado: %s perfis configurados", len(ACCOUNTS))
+if not ACCOUNTS:
+    app.logger.error("INSTAGRAM_CONTAS vazio: nenhum perfil podera responder")
+elif not os.getenv("MET_USER_AGENT"):
+    app.logger.warning("MET_USER_AGENT ausente: previsoes nao poderao ser consultadas")
+Thread(target=subscribe_accounts, daemon=True, name="meta-subscriptions").start()
 EXECUTOR = ThreadPoolExecutor(max_workers=4)
 QUEUE_SLOTS = BoundedSemaphore(64)
 DATABASE = os.getenv("ATENDIMENTO_DB", "/tmp/atendimento-rede.sqlite3")
@@ -177,7 +209,26 @@ def finished(future):
 
 @app.get("/ping")
 def ping():
-    return {"ok": True, "perfis_configurados": len(ACCOUNTS)}
+    return {"ok": True, "perfis_configurados": len(ACCOUNTS),
+            "perfis": sorted(ACCOUNTS),
+            "credenciais_completas": {
+                handle: all((account.instagram_id, account.access_token,
+                             account.app_secret, account.verify_token))
+                for handle, account in ACCOUNTS.items()},
+            "fonte_meteorologica_configurada": bool(os.getenv("MET_USER_AGENT"))}
+
+
+def comment_values(entry):
+    """Aceita comments no entry.field/value e dentro de entry.changes[]."""
+    if entry.get("field") in {"comments", "live_comments"}:
+        value = entry.get("value")
+        if isinstance(value, dict):
+            yield value
+    for change in entry.get("changes", []) or []:
+        if change.get("field") in {"comments", "live_comments"}:
+            value = change.get("value")
+            if isinstance(value, dict):
+                yield value
 
 
 @app.route("/webhook/<handle>", methods=["GET", "POST"])
@@ -203,11 +254,9 @@ def webhook(handle):
         if target is None or ACCOUNTS[target].app_secret != account.app_secret:
             continue
         instagram_id = ACCOUNTS[target].instagram_id
-        for change in entry.get("changes", []):
-            value = change.get("value", {})
+        for value in comment_values(entry):
             author = value.get("from") or {}
-            if (change.get("field") == "comments" and author
-                    and str(author.get("id", "")) != instagram_id
+            if (str(author.get("id", "")) != instagram_id
                     and (author.get("username") or "").casefold() != target):
                 event_id = str(value.get("id", ""))
                 if not enqueue(target, "comments", event_id, {"comment_id": event_id},
