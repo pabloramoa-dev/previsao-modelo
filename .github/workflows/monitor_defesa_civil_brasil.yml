@@ -1,0 +1,37 @@
+name: Defesa Civil Brasil — conferência nacional 08h BRT
+on:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/monitor_defesa_civil_brasil.py
+      - .github/workflows/monitor_defesa_civil_brasil.yml
+permissions:
+  contents: read
+concurrency:
+  group: defesa-civil-brasil
+  cancel-in-progress: false
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Testar vigência e cruzamento regional
+        run: python scripts/monitor_defesa_civil_brasil.py --self-test
+      - name: Consultar IDAP nacional (sem publicar)
+        if: github.event_name != 'push'
+        run: |
+          set -o pipefail
+          python scripts/monitor_defesa_civil_brasil.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always() && github.event_name != 'push'
+        with:
+          name: defesa-civil-brasil
+          path: output/alertas_defesa_civil_brasil.json
+          if-no-files-found: warn
+          retention-days: 7
