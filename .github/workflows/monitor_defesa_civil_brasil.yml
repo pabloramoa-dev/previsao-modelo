@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - scripts/monitor_defesa_civil_brasil.py
+      - scripts/rede/monitor_defesa_civil_brasil.py
       - .github/workflows/monitor_defesa_civil_brasil.yml
 permissions:
   contents: read
@@ -22,12 +22,12 @@ jobs:
         with:
           python-version: '3.12'
       - name: Testar vigência e cruzamento regional
-        run: python scripts/monitor_defesa_civil_brasil.py --self-test
+        run: python scripts/rede/monitor_defesa_civil_brasil.py --self-test
       - name: Consultar IDAP nacional (sem publicar)
         if: github.event_name != 'push'
         run: |
           set -o pipefail
-          python scripts/monitor_defesa_civil_brasil.py | tee -a "$GITHUB_STEP_SUMMARY"
+          python scripts/rede/monitor_defesa_civil_brasil.py | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always() && github.event_name != 'push'
         with:
