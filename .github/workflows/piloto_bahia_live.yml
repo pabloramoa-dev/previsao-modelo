@@ -1,0 +1,89 @@
+name: Piloto Bahia ao vivo — sem publicação
+on:
+  push:
+    branches: [preparar-previsaobahia]
+    paths:
+      - '.github/workflows/piloto_bahia_live.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: piloto-bahia-live
+  cancel-in-progress: true
+jobs:
+  render:
+    if: github.ref_name == 'preparar-previsaobahia'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OMP_NUM_THREADS: '2'
+      HYPERFRAMES_NO_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+      PREVISAO_HORA_ALVO: '6'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/previsao_kokoro
+          key: kokoro-v1.0
+      - name: Dependências originais
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q ffmpeg espeak-ng
+          pip install -r requirements/test.txt numpy scipy kokoro-onnx soundfile
+      - name: Preparar HyperFrames
+        uses: ./.github/actions/setup-hyperframes
+      - name: Gerar canal isolado da Bahia
+        run: |
+          set -euo pipefail
+          python -m scripts.novo_estado BA --destino "$RUNNER_TEMP/piloto-ba"
+          ln -s "$GITHUB_WORKSPACE/video/node_modules" "$RUNNER_TEMP/piloto-ba/video/node_modules"
+          cd "$RUNNER_TEMP/piloto-ba"
+          python scripts/isolation_guard.py
+          python -m scripts.validar_estado
+          python -m scripts.sincronizar_marca --check
+      - name: Coletar previsão meteorológica real — todos os 54 pontos
+        run: |
+          cd "$RUNNER_TEMP/piloto-ba"
+          python -m scripts.collect_live output/snapshot.json --tier 2
+          python - <<'PY'
+          import datetime, json, math, pathlib
+          from zoneinfo import ZoneInfo
+          from src.previsao import estado
+          from src.previsao.editorial.cinco import cinco_regioes, faltando
+          d=json.loads(pathlib.Path('output/snapshot.json').read_text())
+          bloco=d['forecast']['today']
+          assert bloco['date']==datetime.datetime.now(ZoneInfo('America/Bahia')).date().isoformat(), 'Previsão fora da data local'
+          validos=[x for x in bloco['locations'] if all(isinstance(x.get(k),(int,float)) and math.isfinite(x[k]) for k in ('min_c','max_c'))]
+          assert validos, 'Nenhum ponto real válido'
+          linhas=cinco_regioes(validos)
+          assert not faltando(linhas), 'Regiões sem dados válidos: '+str(faltando(linhas))
+          assert len(linhas)==9, 'Quadro regional incompleto'
+          print('Pontos com temperatura válida:',len(validos))
+          print('Data:',bloco['date'])
+          print('Regiões:',len(linhas))
+          with open('output/cobertura_piloto.json','w') as f:
+              json.dump({'data':bloco['date'],'pontos_validos':len(validos),'regioes':linhas},f,ensure_ascii=False,indent=2)
+          PY
+      - name: Renderizar Bira com dados atuais (sem Meta)
+        run: |
+          cd "$RUNNER_TEMP/piloto-ba"
+          python hyperframes/gerar_hf.py --snapshot output/snapshot.json --personagem bira --format antes_de_sair --out output/PREVISAO_BAHIA_PILOTO.mp4
+          python scripts/qa_video.py output/PREVISAO_BAHIA_PILOTO.mp4
+      - name: Preparar artefato para revisão
+        run: |
+          cd "$RUNNER_TEMP/piloto-ba"
+          mkdir -p "$GITHUB_WORKSPACE/output/piloto-ba"
+          cp output/PREVISAO_BAHIA_PILOTO.mp4 output/snapshot.json output/cobertura_piloto.json "$GITHUB_WORKSPACE/output/piloto-ba/"
+          for f in output/*.jpg output/*.quality.json output/work_bira/roteiro.txt; do
+            if [[ -f "$f" ]]; then cp "$f" "$GITHUB_WORKSPACE/output/piloto-ba/"; fi
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piloto-bahia-previsao-real
+          path: output/piloto-ba/
+          if-no-files-found: error
+          retention-days: 3
