@@ -450,11 +450,11 @@ def entregar(personagem, out, pacote, batidas, segs, work):
 
 
 def main():
-    from src.previsao.editorial.formats import TITLES
+    from src.previsao import estado
     ap = argparse.ArgumentParser()
     ap.add_argument('--personagem', choices=('bira', 'bia'), default='bira')
     ap.add_argument('--out', required=True)
-    ap.add_argument('--format', choices=TITLES, default='antes_de_sair')
+    ap.add_argument('--format', choices=estado.FORMATOS, default='antes_de_sair')
     ap.add_argument('--topico', default=None)
     ap.add_argument('--qualidade', default='standard', choices=['draft', 'standard', 'high'])
     ap.add_argument('--so-html', action='store_true', help='só gera o index.html (sem render)')

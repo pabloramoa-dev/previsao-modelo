@@ -69,6 +69,7 @@ jobs:
               json.dump({'data':bloco['date'],'pontos_validos':len(validos),'regioes':linhas},f,ensure_ascii=False,indent=2)
           PY
       - name: Renderizar Bira com dados atuais (sem Meta)
+        timeout-minutes: 30
         run: |
           cd "$RUNNER_TEMP/piloto-ba"
           python hyperframes/gerar_hf.py --snapshot output/snapshot.json --personagem bira --format antes_de_sair --out output/PREVISAO_BAHIA_PILOTO.mp4

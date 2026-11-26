@@ -364,7 +364,7 @@ def cena_quadro(p, cena, bat):
     miolo = f'''{paisagem(p["ceu"], "qd")}
  <div class="qd-veu"></div>
  <div class="qd-topo"><span class="qd-check">✓</span><span class="qd-titulo">{esc(res["dados"].get("titulo", "NA REGIÃO"))}</span></div>
- <div class="qd-painel">
+ <div class="qd-painel{' qd-compacto' if len(cidades) > 7 else ''}">
   <div class="qd-head"><span>AS {len(cidades)} REGIÕES</span><span class="qd-cols"><b>MÍN</b><b>MÁX</b></span></div>
   {"".join(linhas)}
   <div class="qd-dicas" data-qa-bounds="true">{esc(" · ".join(p.get("dicas_praticas", [])))}</div>
@@ -538,6 +538,12 @@ html, body {{ width: 1080px; height: 1920px; overflow: hidden; background: {NAVY
 .qd-max {{ color:{YEL}; }}
 .qd-metrics {{ display:flex;justify-content:space-between;gap:10px;font-family:"BarlowCB",sans-serif;font-size:30px;color:#b9ccdd;line-height:30px; }}
 .qd-metrics b {{ color:white;font-weight:700; }}
+.qd-compacto .qd-linha {{ height: 87px; padding: 4px 0 4px 22px; }}
+.qd-compacto .qd-main {{ height: 43px; }}
+.qd-compacto .qd-barra {{ top: 9px; height: 66px; }}
+.qd-compacto .qd-cidade {{ font-size: 34px; }}
+.qd-compacto .qd-cels {{ font-size: 38px; }}
+.qd-compacto .qd-metrics {{ font-size: 25px; line-height: 26px; }}
 .qd-dicas {{ font-family:"BarlowCB",sans-serif;font-size:26px;color:{YEL};margin-top:12px;text-align:center;line-height:1.25; }}
 /* ---------- alerta ---------- */
 .al-fundo {{ position: absolute; inset: 0; background-color: {RED}; background-image: repeating-linear-gradient(135deg, rgba(0,0,0,0.18) 0 44px, rgba(0,0,0,0) 44px 88px); }}
