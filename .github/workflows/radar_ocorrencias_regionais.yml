@@ -1,0 +1,34 @@
+name: Radar regional — triagem experimental
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 2,8,11,14,17,20,23 * * *'
+  push:
+    paths:
+      - scripts/rede/radar_regional.py
+      - .github/workflows/radar_ocorrencias_regionais.yml
+permissions:
+  contents: read
+concurrency:
+  group: radar-regional
+  cancel-in-progress: false
+jobs:
+  triagem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Testes
+        run: python scripts/rede/radar_regional.py --self-test
+      - name: Radar sem publicação
+        run: python scripts/rede/radar_regional.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: radar-regional
+          path: output/radar_regional.json
+          if-no-files-found: warn
+          retention-days: 3
