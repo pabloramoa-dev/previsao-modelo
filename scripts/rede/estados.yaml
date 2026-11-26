@@ -99,16 +99,52 @@ estados:
     curto: "Bahia"
     artigo: "a"
     titulo: "BAHIA"
-    grupo: B
+    repo: "previsaobahia"
+    handle: "previsaobahia"
+    marca_falada: "Previsão Bahia"
+    grupo: A
     litoral: true
     cenario: litoral
+    rodizio_cidades: true
+    coleta_tier: 2
+    perfil_editorial: "bahia_editorial.md"
     regioes:
-      - {rotulo: "Salvador", ancora: "Salvador", reservas: ["Lauro de Freitas", "Camaçari"]}
-      - {rotulo: "Feira e Recôncavo", ancora: "Feira de Santana", reservas: ["Santo Antônio de Jesus", "Cruz das Almas"]}
-      - {rotulo: "Sul", ancora: "Ilhéus", reservas: ["Itabuna", "Porto Seguro"]}
-      - {rotulo: "Sudoeste", ancora: "Vitória da Conquista", reservas: ["Jequié"]}
-      - {rotulo: "Oeste", ancora: "Barreiras", reservas: ["Luís Eduardo Magalhães"]}
-      - {rotulo: "Norte", ancora: "Juazeiro", reservas: ["Paulo Afonso", "Senhor do Bonfim"]}
+      - rotulo: "Litoral Norte e Salvador"
+        ancora: "Salvador"
+        reservas: ["Camaçari","Lauro de Freitas","Mata de São João","Alagoinhas","Conde"]
+        territorios: ["Metropolitano de Salvador","Litoral Norte e Agreste Baiano"]
+      - rotulo: "Feira e Recôncavo"
+        ancora: "Feira de Santana"
+        reservas: ["Santo Antônio de Jesus","Cruz das Almas","Ipirá","Itaberaba","Cachoeira"]
+        territorios: ["Portal do Sertão","Recôncavo","Bacia do Jacuípe","Piemonte do Paraguaçu"]
+      - rotulo: "Nordeste e Sisal"
+        ancora: "Serrinha"
+        reservas: ["Conceição do Coité","Euclides da Cunha","Ribeira do Pombal","Paulo Afonso"]
+        territorios: ["Sisal","Semiárido Nordeste II","Itaparica"]
+      - rotulo: "Norte e São Francisco"
+        ancora: "Juazeiro"
+        reservas: ["Casa Nova","Remanso","Senhor do Bonfim","Jacobina"]
+        territorios: ["Sertão do São Francisco","Piemonte Norte do Itapicuru","Piemonte da Diamantina"]
+      - rotulo: "Chapada e Centro"
+        ancora: "Lençóis"
+        reservas: ["Seabra","Irecê","Macaúbas","Morro do Chapéu","Mucugê","Piatã"]
+        territorios: ["Chapada Diamantina","Irecê","Bacia do Paramirim"]
+      - rotulo: "Oeste e Velho Chico"
+        ancora: "Barreiras"
+        reservas: ["Luís Eduardo Magalhães","Formosa do Rio Preto","Santa Maria da Vitória","Bom Jesus da Lapa","Ibotirama","Correntina"]
+        territorios: ["Bacia do Rio Grande","Bacia do Rio Corrente","Velho Chico"]
+      - rotulo: "Sudoeste e Vales"
+        ancora: "Vitória da Conquista"
+        reservas: ["Guanambi","Itapetinga","Jequié","Amargosa","Brumado"]
+        territorios: ["Sudoeste Baiano","Sertão Produtivo","Médio Sudoeste da Bahia","Médio Rio de Contas","Vale do Jiquiriçá"]
+      - rotulo: "Litoral Sul e Baixo Sul"
+        ancora: "Ilhéus"
+        reservas: ["Itabuna","Itacaré","Valença","Camamu","Cairu"]
+        territorios: ["Litoral Sul","Baixo Sul"]
+      - rotulo: "Litoral do Extremo Sul"
+        ancora: "Porto Seguro"
+        reservas: ["Eunápolis","Teixeira de Freitas","Caravelas","Mucuri","Prado"]
+        territorios: ["Costa do Descobrimento","Extremo Sul"]
   SE:
     nome: "Sergipe"
     curto: "Sergipe"

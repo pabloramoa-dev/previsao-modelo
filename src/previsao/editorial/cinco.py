@@ -14,6 +14,8 @@ emprestado de outra.
 from __future__ import annotations
 
 import math
+import os
+from datetime import datetime
 from typing import Any
 
 from .. import estado
@@ -46,6 +48,14 @@ def _linha(nome: str, loc: dict[str, Any], regiao: str | None) -> dict[str, Any]
     return row
 
 
+def _ids_rodizio(ids: tuple[str, ...], dia: int, turno: int) -> tuple[str, ...]:
+    """Rodízio determinístico: mesmo dia/turno dá a mesma ordem em uma recuperação."""
+    if not ids:
+        return ids
+    inicio = (dia * 2 + turno) % len(ids)
+    return ids[inicio:] + ids[:inicio]
+
+
 def cinco_regioes(locations: list[dict[str, Any]], minimo: int = MINIMO) -> list[dict[str, Any]]:
     """Linhas do cartão: seis regiões fixas, com complemento se faltar alguma.
 
@@ -55,14 +65,19 @@ def cinco_regioes(locations: list[dict[str, Any]], minimo: int = MINIMO) -> list
     por_id = {l.get('id'): l for l in validos}
     usados: set[str] = set()
     linhas: list[dict[str, Any]] = []
+    rodizio = bool(estado.carregar().get('rodizio_cidades'))
+    dia = datetime.now(estado.fuso()).date().toordinal()
+    turno = int(os.environ.get('PREVISAO_HORA_ALVO', '6') == '18')
     for rotulo, ids, zonas in _regioes():
+        if rodizio:
+            ids = _ids_rodizio(ids, dia, turno)
         escolhido = next((por_id[i] for i in ids if i in por_id and i not in usados), None)
         if escolhido is None and zonas:
             escolhido = next((l for l in validos if l.get('zone') in zonas
                               and l.get('id') not in usados), None)
         if escolhido is not None:
             usados.add(escolhido.get('id'))
-            linhas.append(_linha(rotulo, escolhido, rotulo))
+            linhas.append(_linha(escolhido['name'] if rodizio else rotulo, escolhido, rotulo))
     for loc in validos:
         if len(linhas) >= minimo:
             break
@@ -89,6 +104,8 @@ def fala_resumo(linhas: list[dict[str, Any]], quando: str = '') -> str:
     curtos = estado.falado()   # na fala, o nome curto: o cartão já mostra o rótulo
     nomes = [curtos.get(l['nome'], l['nome']) for l in linhas]
     lista = nomes[0] if len(nomes) == 1 else ', '.join(nomes[:-1]) + ' e ' + nomes[-1]
+    if estado.carregar().get('rodizio_cidades') and len(nomes) > 6:
+        lista = ', '.join(nomes[:2]) + ', ' + nomes[-1] + ' e as outras cidades do quadro'
     maximas = [l['max'] for l in linhas]
     lo, hi = min(maximas), max(maximas)
     faixa = f'máxima de {lo:g} graus' if lo == hi else f'de {lo:g} a {hi:g} graus'

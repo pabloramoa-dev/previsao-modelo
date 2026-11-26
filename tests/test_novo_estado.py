@@ -40,9 +40,9 @@ def test_estado_gerado(gerados, uf):
     est = yaml.safe_load((destino / 'config/estado.yaml').read_text(encoding='utf-8'))
     locais = yaml.safe_load((destino / 'config/locais.yaml').read_text(encoding='utf-8'))
     assert est['uf'] == uf and est['fuso_utc'] == FUSO_ESPERADO.get(uf, -3)
-    assert len(est['regioes']) == 6
+    assert len(est['regioes']) == len(REDE['estados'][uf]['regioes'])
     ancoras = [l for l in locais['locations'] if l['sample_tier'] == 1]
-    assert len(ancoras) == 6
+    assert len(ancoras) == len(est['regioes'])
     for loc in locais['locations']:
         r = est['recorte']
         assert r['lat_min'] <= loc['latitude'] <= r['lat_max']
@@ -75,3 +75,21 @@ def test_destino_ocupado_e_recusado(tmp_path):
     (tmp_path / 'algo').write_text('x')
     with pytest.raises(SystemExit, match='vazio'):
         novo.gerar('PR', tmp_path, REDE)
+
+
+def test_cobertura_ba(gerados):
+    destino = gerados['BA']
+    est = yaml.safe_load((destino / 'config/estado.yaml').read_text())
+    locais = yaml.safe_load((destino / 'config/locais.yaml').read_text())
+    assert est['handle'] == 'previsaobahia'
+    assert est['repo'].endswith('/previsaobahia')
+    assert est['rodizio_cidades'] is True
+    assert len(est['regioes']) == 9
+    territorios = [t for r in est['regioes'] for t in r['territorios']]
+    assert len(territorios) == len(set(territorios)) == 27
+    assert len(locais['locations']) == 54
+    assert len({l['ibge'] for l in locais['locations']}) == 54
+    for turno in ('manha', 'noite'):
+        assert '--tier 2' in (destino / f'.github/workflows/reel_{turno}.yml').read_text()
+    assert (destino / 'docs/COBERTURA_REGIONAL.md').is_file()
+    assert not (destino / '.github/workflows/monitor_defesa_civil_brasil.yml').exists()

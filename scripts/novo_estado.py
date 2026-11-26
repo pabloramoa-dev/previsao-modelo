@@ -38,7 +38,8 @@ DONO = 'pabloramoa-dev'
 IGNORAR = {'.git', 'node_modules', '__pycache__', '.pytest_cache', 'output', 'build',
            'renders', 'snapshots'}
 IGNORAR_CAMINHOS = {Path('scripts/rede'), Path('scripts/novo_estado.py'),
-                    Path('tests/test_novo_estado.py'), Path('README.md')}
+                    Path('tests/test_novo_estado.py'), Path('README.md'),
+                    Path('.github/workflows/monitor_defesa_civil_brasil.yml')}
 
 # Canais que já existem fora da rede gerada aqui.
 CANAIS_EXISTENTES = ['previsaorj', 'previsao-rj', 'otemposp', 'previsaobsb', 'previsao-bsb',
@@ -116,7 +117,8 @@ def montar_estado(uf: str, e: dict, rede: dict, cad: dict[str, dict]) -> dict:
     regioes = []
     for r in e['regioes']:
         ids = [slug(r['ancora'])] + [slug(n) for n in r['reservas']]
-        regioes.append({'rotulo': r['rotulo'], 'ids': ids, 'zonas': [f"z_{slug(r['rotulo'])}"]})
+        regioes.append({'rotulo': r['rotulo'], 'ids': ids, 'zonas': [f"z_{slug(r['rotulo'])}"],
+                        **({'territorios': r['territorios']} if r.get('territorios') else {})})
     return {
         'versao': 1,
         'uf': uf,
@@ -125,7 +127,8 @@ def montar_estado(uf: str, e: dict, rede: dict, cad: dict[str, dict]) -> dict:
         'artigo': e['artigo'],
         'regiao_id': f'estado_{uf.casefold()}',
         'marca': f'PREVISÃO {uf}',
-        'marca_falada': f'Previsão {uf}',
+        'marca_falada': e.get('marca_falada') or f'Previsão {uf}',
+        **({'rodizio_cidades': True} if e.get('rodizio_cidades') else {}),
         'handle': handle,
         'slogan': f"O tempo {de} para decidir seu dia.",
         'repo': f'{DONO}/{repo}',
@@ -249,7 +252,7 @@ vozes e testes são os do modelo; o que é deste canal está em `config/estado.y
 
 Dados: [MET Norway](https://api.met.no) (licença CC BY 4.0, crédito em toda legenda).
 
-## Quadro das seis regiões
+## Quadro das regiões
 
 | Região | Âncora (todo Reel) | Reservas |
 | --- | --- | --- |
@@ -318,6 +321,18 @@ def gerar(uf: str, destino: Path, rede: dict | None = None, sincronizar: bool = 
         + dump(isolamento(uf, rede)), encoding='utf-8')
     (cfg / 'eventos_manuais.yaml').write_text('events: []\n', encoding='utf-8')
     ajustar_workflows(destino, est['fuso_utc'], minuto)
+    if e.get('coleta_tier') == 2:
+        for turno in ('manha', 'noite'):
+            wf = destino / '.github' / 'workflows' / f'reel_{turno}.yml'
+            texto = wf.read_text(encoding='utf-8')
+            trecho = 'python -m scripts.collect_live output/snapshot.json'
+            if texto.count(trecho) != 1:
+                raise SystemExit(f'{wf.name}: coleta esperada não encontrada')
+            wf.write_text(texto.replace(trecho, trecho + ' --tier 2'), encoding='utf-8')
+    if e.get('perfil_editorial'):
+        docs = destino / 'docs'
+        docs.mkdir(exist_ok=True)
+        shutil.copyfile(REDE / e['perfil_editorial'], docs / 'COBERTURA_REGIONAL.md')
     dados = destino / 'data'
     (dados / 'editorial_queue.json').write_text('[]\n', encoding='utf-8')
     (dados / 'channel_metrics.json').write_text(
