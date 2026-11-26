@@ -39,7 +39,8 @@ IGNORAR = {'.git', 'node_modules', '__pycache__', '.pytest_cache', 'output', 'bu
            'renders', 'snapshots'}
 IGNORAR_CAMINHOS = {Path('scripts/rede'), Path('scripts/novo_estado.py'),
                     Path('tests/test_novo_estado.py'), Path('README.md'),
-                    Path('.github/workflows/monitor_defesa_civil_brasil.yml')}
+                    Path('.github/workflows/monitor_defesa_civil_brasil.yml'),
+                    Path('.github/workflows/piloto_bahia_live.yml')}
 
 # Canais que já existem fora da rede gerada aqui.
 CANAIS_EXISTENTES = ['previsaorj', 'previsao-rj', 'otemposp', 'previsaobsb', 'previsao-bsb',
