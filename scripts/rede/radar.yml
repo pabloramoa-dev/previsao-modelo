@@ -7,7 +7,7 @@
 # Custo-alvo: R$ 0/mês. Tavily e OpenRouter são usados só dentro das cotas
 # gratuitas abaixo; esgotou, o radar continua só com RSS + extração em Python.
 
-modo: simulacao            # simulacao | publicacao (publicação exige aprovação do Pablo)
+modo: publicacao           # simulacao | publicacao — aprovado pelo Pablo em 27/11/2026
 
 # --------------------------------------------------------------- limiares
 # Critérios INTERNOS de investigação (não são classificação oficial de risco).
