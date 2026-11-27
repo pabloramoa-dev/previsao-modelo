@@ -156,16 +156,15 @@ def montar(oc: dict, fatos: dict, evidencias: list[dict], agora: datetime, canal
     if servicos:
         legenda.append('🚰 Serviço afetado: ' + _lista(servicos, 2))
     legenda.append('📞 Defesa Civil 199 · Bombeiros 193' + (f' · Defesa Civil local {tels[0]}' if tels else ''))
-    legenda.append('Fontes: ' + '; '.join(fontes_txt[:5]))
     legenda.append('Manda pra quem mora na região! {arroba}')
     legenda.append(f"#{re.sub(r'[^A-Za-zÀ-ÿ0-9]', '', cidade.title())} #Chuva #DefesaCivil #EdicaoExtraordinaria")
     data = agora.astimezone(FUSO).strftime('%d/%m')
     return {
         'tipo': 'alerta', 'apresenta': config.carregar()['edicao']['apresenta'], 'validade': validade,
         'titulo': f'{cidade.upper()}: {ROTULO.get(tp, "TEMPORAL")}'[:34],
-        'etiquetas': ['EDIÇÃO EXTRAORDINÁRIA', f'{data} · FONTES CONFIRMADAS'],
+        'etiquetas': ['EXTRAORDINÁRIA', f'{data} · CONFIRMADO'],     # cabem na etiqueta da abertura
         'ceu': 'chuva', 'trilha': False,
-        'fonte': 'Fontes: ' + '; '.join(fontes_txt[:4]),
+        'fonte': '; '.join(fontes_txt[:5]),          # o comunicado acrescenta "Fonte: ..." na legenda
         'ticker': ticker, 'falas': falas, 'legenda': '\n'.join(legenda) + '\n',
         '_radar': {'canal': canal, 'duracao_estimada_s': round(dur(falas), 1)},
     }
