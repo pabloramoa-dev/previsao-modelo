@@ -46,7 +46,8 @@ def self_test():
     assert route("3300407") == "previsao-sul-fluminense"          # Barra Mansa
     assert route("3304557") == "previsao-rj"                       # Rio de Janeiro
     assert route("4314902") == "previsao-rs"                       # Porto Alegre
-    assert route("2927408") is None                                # Salvador: canal BA inativo
+    assert route("2927408") == "previsaobahia"                       # Salvador
+    assert sum(m["uf"] == "BA" for m in config.municipios_monitorados()) == 417
     assert set(config.recorte('sulflu')) == SULFLU
     n = len(config.municipios_monitorados())
     assert n > 2400, n                                             # todos os municípios das UFs atendidas

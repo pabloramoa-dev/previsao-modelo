@@ -267,7 +267,7 @@ def antes_de_sair(snapshot, incerto):
     # apresentador de cena; se todas as batidas fossem dessas, a locucao inteira
     # sairia sobre um cenario vazio. A abertura e o aviso de incerteza sao as
     # batidas em que ele aparece.
-    batidas = [abertura_chuva_24h(snapshot['forecast']['today'], 'hoje') or batida(gancho_rotativo(locs, snapshot['forecast']['today'].get('date'), 'hoje', ancora=destaque_da_semana(snapshot, locs), canal="previsao-modelo"))]
+    batidas = [abertura_chuva_24h(snapshot['forecast']['today'], 'hoje') or batida(gancho_rotativo(locs, snapshot['forecast']['today'].get('date'), 'hoje', ancora=destaque_da_semana(snapshot, locs), canal=estado.handle()))]
     if incerto:
         batidas.append(batida('O cenário ainda tem incerteza. Há possibilidade de mudança.'))
     destaque = gancho_destaque(snapshot, locs, 'hoje')
@@ -293,7 +293,7 @@ def antes_de_sair(snapshot, incerto):
             f"Atenção ao vento: rajadas de até {alta['value']:g} quilômetros por hora "
             f"{em_local(alta['name'])}.",
             'alerta', titulo='VENTO', detalhe=f"até {alta['value']:g} km/h {em_local(alta['name'])}"))
-    batidas.append(batida(engajamento_rotativo(snapshot['forecast']['today'].get('date'), 'hoje', canal="previsao-modelo"), 'cta'))
+    batidas.append(batida(engajamento_rotativo(snapshot['forecast']['today'].get('date'), 'hoje', canal=estado.handle()), 'cta'))
     return batidas
 
 
@@ -312,7 +312,7 @@ def amanha_no_estado(snapshot, incerto):
     quente = max(temps, key=lambda e: e['max_c'])
     chuvas = [e for e in locs if number(e.get('rain_probability_pct'))]
     contraste = regional_contrast(locs)
-    batidas = [abertura_chuva_24h(bloco, 'amanhã') or batida(gancho_rotativo(locs, bloco.get('date'), 'amanhã', ancora=destaque_da_semana(snapshot, locs), canal="previsao-modelo"))]
+    batidas = [abertura_chuva_24h(bloco, 'amanhã') or batida(gancho_rotativo(locs, bloco.get('date'), 'amanhã', ancora=destaque_da_semana(snapshot, locs), canal=estado.handle()))]
     if incerto:
         batidas.append(batida('O cenário para amanhã ainda tem incerteza. Pode mudar até de manhã.'))
     destaque = gancho_destaque(snapshot, locs, 'amanha')
@@ -342,7 +342,7 @@ def amanha_no_estado(snapshot, incerto):
             f"{em_local(alta['name'])}.",
             'alerta', titulo='VENTO AMANHÃ',
             detalhe=f"até {alta['value']:g} km/h {em_local(alta['name'])}"))
-    batidas.append(batida(engajamento_rotativo(bloco.get('date'), 'amanhã', canal="previsao-modelo"), 'cta'))
+    batidas.append(batida(engajamento_rotativo(bloco.get('date'), 'amanhã', canal=estado.handle()), 'cta'))
     return batidas
 
 

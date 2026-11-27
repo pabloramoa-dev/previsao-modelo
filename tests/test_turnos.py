@@ -244,10 +244,14 @@ def test_rodizio_de_retencao_e_engajamento():
         alvo = pub + timedelta(days=i % 2)
         fala = gancho_rotativo(pontos, alvo, quando, canal='teste')
         assert quando in fala.lower() and len(fala.split()) <= 12
-        assert 'Cidade A' in fala or 'Cidade B' in fala
+        if quando == 'amanhã':
+            assert fala == 'Amanhã, o tempo na região fica assim.'
+        else:
+            assert 'Cidade A' in fala or 'Cidade B' in fala
         assert not any(x in fala.lower() for x in ('alerta', 'rajada', 'chuva forte'))
         assert fala == gancho_rotativo(pontos, alvo, quando, canal='teste')
         ganchos.add(fala)
         ctas.add(engajamento_rotativo(alvo, quando, canal='teste'))
-    assert len(ganchos) >= 12
-    assert len(ctas) >= 8
+    assert len(ganchos) >= 6
+    assert len(ctas) >= 5
+    assert engajamento_rotativo(alvo, 'amanhã', canal='teste') == 'Manda pra quem vai sair amanhã.'

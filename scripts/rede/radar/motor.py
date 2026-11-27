@@ -245,7 +245,7 @@ def executar(modo: str, agora: datetime | None = None, src=None, saida: Path = P
             arq = saida / 'radar' / oid / 'comunicado.yaml'
             roteiro.gravar(rot, arq)
             r['edicao'].update(arquivo=str(arq), canal=c['canal'], duracao_estimada_s=rot['_radar']['duracao_estimada_s'],
-                               publicar=config.modo() == 'publicacao' and r['classificacao']['elegivel_publicacao'])
+                               publicar=config.modo() == 'publicacao' and bool(canal.get('repo')) and r['classificacao']['elegivel_publicacao'])
             ocorrencias.registrar_edicao(oid, novos, str(arq), agora.isoformat())
             edicoes.append(r['edicao'])
 

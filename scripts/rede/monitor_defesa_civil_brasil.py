@@ -18,7 +18,7 @@ TZ = ZoneInfo("America/Sao_Paulo")
 UFS = dict(zip("11 12 13 14 15 16 17 21 22 23 24 25 26 27 28 29 31 32 33 35 41 42 43 50 51 52 53".split(),
                "RO AC AM RR PA AP TO MA PI CE RN PB PE AL SE BA MG ES RJ SP PR SC RS MS MT GO DF".split()))
 CANAIS = {"MG":"previsaomg", "SP":"o-tempo-sp",
-          "PR":"previsao-pr", "RS":"previsao-rs", "DF":"previsao-bsb"}
+          "PR":"previsao-pr", "RS":"previsao-rs", "DF":"previsao-bsb", "BA":"previsaobahia"}
 SULFLU = {"3306305","3300407","3304110","3304201","3300308","3304003",
           "3302254","3304128","3303955","3304409"}
 RJ_METRO = {"3304557","3303302","3301702","3303500","3304904","3300456",
