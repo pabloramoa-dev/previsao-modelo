@@ -72,7 +72,7 @@ def tipo_principal(fatos):
     if fatos.get('rios_corregos') and ('transbordamento' in tipos or 'enchente' in tipos):
         return 'transbordamento'
     for t in ORDEM:
-        if t in tipos:
+        if t in tipos and t != 'transbordamento':     # "rios transbordaram" só com rio identificado
             return t
     return 'temporal'
 
@@ -90,7 +90,6 @@ def montar(oc: dict, fatos: dict, evidencias: list[dict], agora: datetime, canal
         gancho = f'Atenção, {cidade}! A chuva forte fez transbordar {"os rios " + _lista([_sem_prefixo_rio(r) for r in rios], 2) if len(rios) > 1 else "o " + rios[0]}.'
     else:
         gancho = f'Atenção, {cidade}! {ROTULO.get(tp, "Temporal").capitalize()} atinge a cidade.'
-        gancho = gancho.replace('Rios transbordaram atinge', 'Rios transbordam em')
 
     falas = [{'cena': 'abertura', 'fala': gancho}]
     detalhe = ' · '.join(bairros[:3]) or cidade.upper()
