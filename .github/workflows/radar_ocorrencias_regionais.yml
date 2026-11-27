@@ -27,6 +27,10 @@ on:
         description: "Renderizar o MP4 das edições geradas?"
         type: boolean
         default: true
+  # Disparo externo de reserva (cron-job.org), como nos outros canais:
+  # POST /repos/pabloramoa-dev/previsao-modelo/dispatches  {"event_type": "radar_leve" | "radar_profunda"}
+  repository_dispatch:
+    types: [radar_leve, radar_profunda]
   schedule:
     - cron: '*/15 * * * *'                    # leve
     - cron: '7 2,8,11,14,17,20,23 * * *'      # profunda: 23, 05, 08, 11, 14, 17, 20h BRT
@@ -46,7 +50,7 @@ permissions:
 # Fila por modo: uma execução leve nova não derruba a profunda que espera, e
 # push (só testes) nunca entra na fila.
 concurrency:
-  group: radar-${{ github.event_name == 'push' && github.run_id || (github.event.schedule == '*/15 * * * *' && 'leve' || 'profunda') }}
+  group: radar-${{ github.event_name == 'push' && github.run_id || ((github.event.schedule == '*/15 * * * *' || github.event.action == 'radar_leve') && 'leve' || 'profunda') }}
   cancel-in-progress: false
 
 jobs:
@@ -85,6 +89,7 @@ jobs:
           CASO: ${{ inputs.caso }}
           MODO_MANUAL: ${{ inputs.modo }}
           CRON: ${{ github.event.schedule }}
+          DISPARO: ${{ github.event.action }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -o pipefail
@@ -97,6 +102,7 @@ jobs:
           fi
           MODO=profunda
           [ "$CRON" = "*/15 * * * *" ] && MODO=leve
+          [ "$DISPARO" = "radar_leve" ] && MODO=leve
           [ -n "$MODO_MANUAL" ] && MODO="$MODO_MANUAL"
           python scripts/rede/radar_regional.py --modo "$MODO" | tee -a "$GITHUB_STEP_SUMMARY"
 
