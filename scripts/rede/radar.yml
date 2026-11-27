@@ -1,0 +1,121 @@
+# Radar de Ocorrências Meteorológicas Regionais — configuração central.
+#
+# Roda SÓ no previsao-modelo e atende toda a rede: uma pesquisa por ocorrência,
+# reaproveitada por todos os canais (economia de créditos). Os canais recebem
+# o comunicado pronto para conferir/publicar.
+#
+# Custo-alvo: R$ 0/mês. Tavily e OpenRouter são usados só dentro das cotas
+# gratuitas abaixo; esgotou, o radar continua só com RSS + extração em Python.
+
+modo: simulacao            # simulacao | publicacao (publicação exige aprovação do Pablo)
+
+# --------------------------------------------------------------- limiares
+# Critérios INTERNOS de investigação (não são classificação oficial de risco).
+# Ajuste por UF ou por canal em `ajustes`; o que não for ajustado herda o padrão.
+limiares:
+  padrao:
+    - {horas: 1,  mm: 20}
+    - {horas: 3,  mm: 40}
+    - {horas: 24, mm: 50}
+    - {horas: 48, mm: 80}
+    - {horas: 72, mm: 120}
+  prioridade_maxima_mm_24h: 100
+  ajustes:
+    # exemplo: a Serra Gaúcha costuma suportar mais chuva antes de ocorrências
+    # RS: {24: 60, 48: 100}
+    {}
+
+eventos:   # o que investigar além de chuva (palavras normalizadas, sem acento)
+  enchente: [enchente, inundacao, inundou, cheia]
+  alagamento: [alagamento, alagou, alagada, alagadas, alagados]
+  enxurrada: [enxurrada]
+  transbordamento: [transbord]
+  deslizamento: [deslizamento, desliza, queda de barreira, movimento de massa, desabamento]
+  granizo: [granizo]
+  vendaval: [vendaval, ventania, rajada, destelhamento, destelhad]
+  tornado: [tornado]
+  ciclone: [ciclone, ciclone extratropical]
+  temporal: [temporal, tempestade]
+  interdicao: [interdit, interdicao, bloquead]
+  energia: [sem energia, falta de energia, sem luz, queda de energia]
+  agua: [abastecimento, falta d agua, sem agua, eta ]
+
+# --------------------------------------------------------------- canais
+# UF -> canal. Sul Fluminense tem recorte próprio (códigos IBGE abaixo) e
+# tem prioridade sobre o @previsaorj. UF nova = só acrescentar aqui
+# (o radar já cobre todos os municípios do cadastro do IBGE).
+canais:
+  previsao-rj:             {uf: RJ, handle: previsaorj,    repo: pabloramoa-dev/previsao-rj}
+  previsao-sul-fluminense: {uf: RJ, handle: previsaosulflu, repo: pabloramoa-dev/previsao-sul-fluminense, recorte: sulflu}
+  o-tempo-sp:              {uf: SP, handle: otemposp,      repo: pabloramoa-dev/o-tempo-sp}
+  previsao-rs:             {uf: RS, handle: previsaors,    repo: pabloramoa-dev/previsao-rs}
+  previsao-pr:             {uf: PR, handle: previsaopr,    repo: pabloramoa-dev/previsao-pr}
+  previsaomg:              {uf: MG, handle: previsaomg,    repo: pabloramoa-dev/previsaomg}
+  previsao-bsb:            {uf: DF, handle: previsaobsb,   repo: pabloramoa-dev/previsao-bsb}
+  previsaobahia:           {uf: BA, handle: previsaobahia, repo: null, ativo: false}   # repositório ainda não encontrado
+
+# @previsaovr: coberto pelo @previsaosulflu (mesmo recorte). Não monitora em
+# duplicidade; reative aqui só se o perfil voltar a ter repositório próprio.
+
+recortes:
+  sulflu:   # Volta Redonda, Barra Mansa, Resende, Barra do Piraí, Itatiaia, Pinheiral, Piraí, Porto Real, Quatis, Rio Claro
+    - "3306305"
+    - "3300407"
+    - "3304201"
+    - "3300308"
+    - "3302254"
+    - "3303955"
+    - "3304003"
+    - "3304128"
+    - "3304110"
+    - "3304409"
+    # mesma lista de SULFLU em monitor_defesa_civil_brasil.py; acrescente aqui
+    # (código IBGE de 7 dígitos) se o @previsaosulflu passar a cobrir mais cidades
+
+# --------------------------------------------------------------- cotas
+# Contadores centralizados (estado/cotas.json). Margem de segurança abaixo
+# da franquia gratuita para nunca passar dela.
+cotas:
+  tavily:
+    franquia_mensal: 1000      # plano gratuito "Researcher"
+    teto_mensal: 800
+    teto_por_execucao: 6       # créditos; busca básica = 1 crédito
+    teto_prioridade: 12        # execução com ocorrência grave pode ir até aqui
+  openrouter:
+    franquia_diaria: 50        # modelos :free sem créditos comprados
+    teto_diario: 40
+    teto_por_execucao: 8
+    rpm: 15
+
+# --------------------------------------------------------------- investigação
+investigacao:
+  max_candidatos_por_execucao: 25      # RSS (grátis)
+  max_aprofundados_por_execucao: 4     # Tavily + LLM
+  janela_noticia_horas: 36             # mais velho que isso não é "atual"
+  cache_rss_minutos: 25
+  cache_tavily_horas: 6
+  cache_llm_horas: 12
+
+# --------------------------------------------------------------- segurança editorial
+editorial:
+  confirmacao:
+    fontes_oficiais_min: 1        # OU
+    veiculos_independentes_min: 2 # domínios diferentes, mesma ocorrência
+  atualizacao_minima: 2           # fatos novos relevantes para nova edição
+  bloquear_se_contraditorio: true
+  dominios_oficiais:
+    - gov.br
+    - defesacivil
+    - inmet
+    - cemaden
+    - inea.rj
+    - prefeitura
+    - .leg.br
+    - cbmerj
+  telefones_oficiais: ["199", "193", "190", "192", "40199"]
+
+# --------------------------------------------------------------- edição extraordinária
+edicao:
+  duracao_alvo_s: [45, 75]
+  formato: "1080x1920 MP4 vertical"
+  apresenta: bia
