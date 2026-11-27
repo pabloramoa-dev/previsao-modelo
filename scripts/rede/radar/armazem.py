@@ -152,10 +152,33 @@ class Ocorrencias:
     def fatos_ja_publicados(self, oid: str) -> set[str]:
         return set(self.d['edicoes'].get(oid, {}).get('fatos', []))
 
+    # Uma edição só conta como feita depois que o vídeo foi renderizado e
+    # conferido (artifact "edicao-ok-<id>" do job de edição). Até lá fica
+    # pendente; se o render falhar, a pendência vence e a próxima execução
+    # tenta de novo, em vez de a ocorrência ficar travada como "duplicada".
+    def em_producao(self, oid: str) -> bool:
+        return oid in self.d.setdefault('pendentes', {})
+
+    def registrar_pendente(self, oid: str, fatos: set[str], arquivo: str, quando: str) -> None:
+        self.d.setdefault('pendentes', {})[oid] = {'fatos': sorted(fatos), 'arquivo': arquivo, 'quando': quando}
+
     def registrar_edicao(self, oid: str, fatos: set[str], arquivo: str, quando: str) -> None:
         e = self.d['edicoes'].setdefault(oid, {'fatos': [], 'arquivos': []})
-        e['fatos'] = sorted(set(e['fatos']) | fatos)
+        e['fatos'] = sorted(set(e['fatos']) | set(fatos))
         e['arquivos'].append({'arquivo': arquivo, 'quando': quando})
+
+    def resolver_pendentes(self, agora: datetime, confirmadas: set[str], horas: float = 3) -> dict:
+        """Confirma as que renderizaram; descarta as vencidas sem confirmação."""
+        res = {'confirmadas': [], 'vencidas': []}
+        for oid, p in list(self.d.setdefault('pendentes', {}).items()):
+            if oid in confirmadas:
+                self.registrar_edicao(oid, set(p['fatos']), p['arquivo'], p['quando'])
+                self.d['pendentes'].pop(oid)
+                res['confirmadas'].append(oid)
+            elif (agora - datetime.fromisoformat(p['quando'])).total_seconds() > horas * 3600:
+                self.d['pendentes'].pop(oid)
+                res['vencidas'].append(oid)
+        return res
 
     def encerrar_antigas(self, agora: datetime, horas: int = 96) -> None:
         for oid, r in list(self.d['ativas'].items()):
