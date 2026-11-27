@@ -28,8 +28,8 @@ titulos:
   amanha_no_estado: "AMANHÃ NO SUL FLU"
 
 apresentadores:
-  bira: {cargo: "TEMPO NO SUL FLUMINENSE"}
-  bia: {cargo: "PLANTÃO DO SUL FLUMINENSE"}
+  bira: {cargo: "TEMPO NO SUL FLU"}
+  bia: {cargo: "PLANTÃO SUL FLU"}
 
 hashtags:
   padrao: "#PrevisaoSulFlu #SulFluminense #VoltaRedonda #BarraMansa"
