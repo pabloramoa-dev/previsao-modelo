@@ -97,10 +97,30 @@ def alertas_inmet(agora: datetime, max_avisos: int = 60) -> list[dict]:
 
 
 # ------------------------------------------------------------ Google Notícias
+_ULTIMA_GN = [0.0]
+
+
+def _baixar_google(url: str) -> bytes:
+    """Google Notícias devolve 429 se pedirmos rápido demais: 1 pedido a cada 2,5 s
+    e, no 429, espera 20 s e tenta de novo (até 3 vezes)."""
+    for tentativa in range(3):
+        espera = _ULTIMA_GN[0] + 2.5 - time.monotonic()
+        if espera > 0:
+            time.sleep(espera)
+        _ULTIMA_GN[0] = time.monotonic()
+        try:
+            return baixar(url, tentativas=1)
+        except Exception as e:  # noqa: BLE001
+            if getattr(e, 'code', None) != 429 or tentativa == 2:
+                raise
+            time.sleep(20 * (tentativa + 1))
+    raise RuntimeError('inalcançável')
+
+
 def google_noticias(consulta: str, agora: datetime, janela_h: int = 36, maximo: int = 15) -> list[dict]:
     url = 'https://news.google.com/rss/search?' + urlencode(
         {'q': consulta, 'hl': 'pt-BR', 'gl': 'BR', 'ceid': 'BR:pt-419'})
-    raiz = xml_seguro(baixar(url))
+    raiz = xml_seguro(_baixar_google(url))
     out = []
     for item in raiz.findall('.//item'):
         try:
