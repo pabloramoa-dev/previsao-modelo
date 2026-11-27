@@ -40,12 +40,25 @@ def _numero(s: str) -> int | None:
     return int(s) if s.isdigit() else NUM.get(s)
 
 
+NEGACAO = re.compile(r'\b(nao|nem|sem|nenhum|nenhuma|descart\w*)\b[^.;]{0,45}$')
+
+
+def _cita(n: str, termo: str) -> bool:
+    """O termo aparece SEM negação logo antes ("não registrou transbordamento" não conta)."""
+    i = n.find(termo)
+    while i >= 0:
+        if not NEGACAO.search(n[max(0, i - 60):i]):
+            return True
+        i = n.find(termo, i + 1)
+    return False
+
+
 def extrair(municipio: str, uf: str, evidencias: list[dict]) -> dict:
     textos = [f"{e.get('titulo', '')}. {e.get('trecho', '')}" for e in evidencias]
     tudo = '\n'.join(textos)
     n = config.norm(tudo)
 
-    tipos = [t for t, ps in config.eventos().items() if any(p in n for p in ps)]
+    tipos = [t for t, ps in config.eventos().items() if any(_cita(n, p) for p in ps)]
     mm = [float(x.replace(',', '.')) for x in re.findall(r'(\d{1,3}(?:[.,]\d)?)\s*(?:mm\b|mil[ií]metros)', tudo)]
 
     rios = []
@@ -86,7 +99,7 @@ def extrair(municipio: str, uf: str, evidencias: list[dict]) -> dict:
     if m:
         periodo = f'{m.group(1)} de {m.group(2)} e a {m.group(3)} de {m.group(4)}'.lower()
 
-    passado = sum(p in n for p in PASSADO)
+    passado = sum(_cita(n, p) for p in PASSADO)
     risco = sum(p in n for p in RISCO)
     situacao = 'ocorrencia_confirmada' if passado >= 2 else ('risco_previsto' if risco else 'indefinido')
 
