@@ -1,34 +1,199 @@
-name: Radar regional — triagem experimental
+name: Radar de ocorrências regionais
+
+# Radar CENTRAL da rede (uma pesquisa serve a todos os canais).
+#   - a cada 15 min: monitoramento leve (alertas oficiais); alerta grave novo
+#     dispara investigação prioritária na mesma execução
+#   - 05, 08, 11, 14, 17, 20 e 23h (Brasília): pesquisa aprofundada
+# Não mexe nos agendamentos das previsões nem dos alertas existentes.
+#
+# Publicação: scripts/rede/radar.yml -> modo. Em "simulacao" (padrão) só gera o
+# relatório, o roteiro e o MP4 como artifact. Nada vai ao Instagram.
+# Custo: R$ 0 — repositório público (Actions grátis), RSS grátis, Tavily e
+# OpenRouter só dentro das franquias gratuitas, com teto no config.
+
 on:
   workflow_dispatch:
+    inputs:
+      modo:
+        description: "leve ou profunda"
+        type: choice
+        options: [profunda, leve]
+        default: profunda
+      caso:
+        description: "Opcional: caso histórico offline (ex.: tests/fixtures/radar/barra_mansa_2026-11-26.json)"
+        type: string
+        default: ""
+      renderizar:
+        description: "Renderizar o MP4 das edições geradas?"
+        type: boolean
+        default: true
   schedule:
-    - cron: '17 2,8,11,14,17,20,23 * * *'
+    - cron: '*/15 * * * *'                    # leve
+    - cron: '7 2,8,11,14,17,20,23 * * *'      # profunda: 23, 05, 08, 11, 14, 17, 20h BRT
   push:
     paths:
-      - scripts/rede/radar_regional.py
-      - .github/workflows/radar_ocorrencias_regionais.yml
+      - 'scripts/rede/radar_regional.py'
+      - 'scripts/rede/radar/**'
+      - 'scripts/rede/identidades/**'
+      - 'scripts/rede/radar.yml'
+      - 'tests/test_radar.py'
+      - '.github/workflows/radar_ocorrencias_regionais.yml'
+
 permissions:
   contents: read
+
 concurrency:
   group: radar-regional
   cancel-in-progress: false
+
 jobs:
-  triagem:
+  radar:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    outputs:
+      edicoes: ${{ steps.fila.outputs.edicoes }}
+      total: ${{ steps.fila.outputs.total }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Dependências
+        run: pip install -q -r requirements/test.txt
+
+      - name: Testes do radar (sem rede, sem créditos)
+        run: |
+          python scripts/rede/radar_regional.py --self-test
+          python -m pytest -q tests/test_radar.py
+
+      - name: Restaurar estado (cache, cotas, ocorrências)
+        if: github.event_name != 'push'
+        uses: actions/cache/restore@v4
         with:
-          python-version: '3.12'
-      - name: Testes
-        run: python scripts/rede/radar_regional.py --self-test
-      - name: Radar sem publicação
-        run: python scripts/rede/radar_regional.py
+          path: estado_radar
+          key: radar-estado-${{ github.run_id }}
+          restore-keys: radar-estado-
+
+      - name: Rodar o radar
+        if: github.event_name != 'push'
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          RADAR_ESTADO: estado_radar
+          CASO: ${{ inputs.caso }}
+          MODO_MANUAL: ${{ inputs.modo }}
+          CRON: ${{ github.event.schedule }}
+        run: |
+          set -o pipefail
+          if [ -n "$CASO" ]; then
+            python scripts/rede/radar_regional.py --caso "$CASO" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          MODO=profunda
+          [ "$CRON" = "*/15 * * * *" ] && MODO=leve
+          [ -n "$MODO_MANUAL" ] && MODO="$MODO_MANUAL"
+          python scripts/rede/radar_regional.py --modo "$MODO" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar estado
+        if: always() && github.event_name != 'push'
+        uses: actions/cache/save@v4
+        with:
+          path: estado_radar
+          key: radar-estado-${{ github.run_id }}
+
+      - name: Fila de edições
+        id: fila
+        if: github.event_name != 'push'
+        run: |
+          python - <<'EOF' >> "$GITHUB_OUTPUT"
+          import json, pathlib
+          p = pathlib.Path('output/radar_regional.json')
+          d = json.loads(p.read_text()) if p.exists() else {}
+          hist = bool(d.get('caso_historico'))
+          fila = [{'arquivo': e['arquivo'], 'canal': e['canal'], 'publicar': bool(e['publicar']) and not hist,
+                   'historico': hist} for e in d.get('edicoes', [])][:4]
+          print('edicoes=' + json.dumps(fila))
+          print(f'total={len(fila)}')
+          EOF
+
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && github.event_name != 'push'
         with:
-          name: radar-regional
-          path: output/radar_regional.json
-          if-no-files-found: warn
-          retention-days: 3
+          name: radar-${{ github.run_id }}
+          path: |
+            output/radar_regional.json
+            output/radar_resumo.md
+            output/radar/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+  edicao:
+    needs: radar
+    if: needs.radar.outputs.total != '' && needs.radar.outputs.total != '0' && (github.event_name != 'workflow_dispatch' || inputs.renderizar)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        item: ${{ fromJSON(needs.radar.outputs.edicoes) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {name: 'radar-${{ github.run_id }}', path: output}
+      - name: Preparar HyperFrames
+        uses: ./.github/actions/setup-hyperframes
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Dependências
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg espeak-ng
+          pip install -q -r requirements/test.txt -r requirements/comunicado.txt
+
+      - name: Identidade do canal (personagens e estúdio originais, marca do perfil)
+        env:
+          CANAL: ${{ matrix.item.canal }}
+        run: |
+          if [ -f "scripts/rede/identidades/$CANAL/estado.yaml" ]; then
+            # configuração do motor + identidade própria do canal por cima
+            mkdir -p /tmp/ident && cp config/*.y*ml /tmp/ident/
+            cp "scripts/rede/identidades/$CANAL/estado.yaml" /tmp/ident/estado.yaml
+            echo "PREVISAO_CONFIG_DIR=/tmp/ident" >> "$GITHUB_ENV"; exit 0
+          fi
+          REPO=$(python -c "import yaml;print(yaml.safe_load(open('scripts/rede/radar.yml'))['canais']['$CANAL']['repo'])")
+          git clone -q --depth 1 "https://github.com/$REPO" /tmp/canal
+          test -f /tmp/canal/config/estado.yaml || { echo "Canal sem config/estado.yaml: crie scripts/rede/identidades/$CANAL"; exit 1; }
+          echo "PREVISAO_CONFIG_DIR=/tmp/canal/config" >> "$GITHUB_ENV"
+
+      - name: Renderizar edição extraordinária (Bira e Bia)
+        env:
+          ROTEIRO: ${{ matrix.item.arquivo }}
+          HISTORICO: ${{ matrix.item.historico }}
+        run: |
+          EXTRA=""; [ "$HISTORICO" = "true" ] && EXTRA="--ignorar-validade"   # caso de teste: nunca publica
+          python hyperframes/comunicado_dupla.py "$ROTEIRO" --so-validar $EXTRA
+          python hyperframes/comunicado_dupla.py "$ROTEIRO" --out output/REEL.mp4 $EXTRA
+          python scripts/qa_video.py output/REEL.mp4
+          { echo "## Roteiro"; echo '```'; cat output/work_comunicado/roteiro.txt; echo '```';
+            echo "## Legenda"; echo '```'; cat output/LEGENDA.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: edicao-${{ matrix.item.canal }}-${{ strategy.job-index }}-${{ github.run_id }}
+          path: |
+            output/REEL.mp4
+            output/CAPA.jpg
+            output/LEGENDA.txt
+            ${{ matrix.item.arquivo }}
+          retention-days: 14
+
+      # Publicação: só com modo=publicacao no config E a ocorrência elegível
+      # (confirmada, sem contradição, não duplicada). Entrega o MP4 ao canal,
+      # que publica pelo workflow "Publicar comunicado pronto" dele.
+      - name: Entregar ao canal para publicação
+        if: matrix.item.publicar == true
+        env:
+          GH_TOKEN: ${{ secrets.RADAR_REDE_TOKEN }}
+          CANAL: ${{ matrix.item.canal }}
+        run: |
+          test -n "$GH_TOKEN" || { echo "Sem RADAR_REDE_TOKEN: publicação bloqueada."; exit 0; }
+          echo "Entrega automática ainda não habilitada para $CANAL (aguardando aprovação do Pablo)."
