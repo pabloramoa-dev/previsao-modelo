@@ -131,8 +131,12 @@ def montar(oc: dict, fatos: dict, evidencias: list[dict], agora: datetime, canal
         if len(opcionais) <= 1:
             break
         falas.pop(opcionais[0])
-    if dur(falas) < alvo_min and periodo == '' and mm:
-        falas.insert(2, {'cena': 'frase', 'fala': f'A Defesa Civil de {cidade} segue monitorando o nível dos rios e as encostas.'})
+    # curto demais: completa com orientações gerais (nenhum fato novo é inventado)
+    reforcos = [f'A Defesa Civil de {cidade} segue monitorando a situação; acompanhe só os avisos oficiais.',
+                'Evite áreas de risco, como encostas e margens de rios, enquanto a chuva continuar.',
+                'Se precisar sair de casa, leve documentos e remédios e avise alguém do seu destino.']
+    while dur(falas) < alvo_min and reforcos:
+        falas.insert(len(falas) - 2, {'cena': 'frase', 'fala': reforcos.pop(0)})
 
     fontes_txt = []
     for e in evidencias:
