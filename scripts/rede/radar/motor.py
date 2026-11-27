@@ -295,7 +295,7 @@ def resumo_md(rel: dict) -> str:
         cl = i['classificacao']
         L.append(f"- **{i['cidade']}/{i['uf']}** → `{cl['status']}` (prioridade {cl['prioridade']}; "
                  f"oficiais {cl['fontes_oficiais']}, veículos {len(cl['veiculos_independentes'])}) — "
-                 f"edição: {(i.get('edicao') or {}).get('motivo', '—')}")
+                 f"edição: {(i.get('edicao') or {}).get('motivo', '—')} · Tavily: {i['tavily']} · IA: {i['llm']}")
     if rel['erros_de_fonte']:
         L += ['', 'Fontes com falha (não significa ausência de ocorrência):']
         L += [f"- {e['fonte']}: {e['erro']}" for e in rel['erros_de_fonte']]
