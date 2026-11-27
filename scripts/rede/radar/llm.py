@@ -24,7 +24,8 @@ from . import armazem, config, seguranca
 
 MODELOS_URL = 'https://openrouter.ai/api/v1/models'
 CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions'
-PREFERENCIA = ('qwen', 'deepseek', 'llama-3.3', 'gemma', 'mistral', 'llama')
+# Qwen/DeepSeek quando houver versão :free; em 27/11/2026 a lista grátis tinha Nemotron e Gemma 4
+PREFERENCIA = ('qwen', 'deepseek', 'nemotron-3.5-super', 'gemma-4-31b', 'nemotron-3-ultra', 'gemma', 'llama', 'mistral')
 
 ESQUEMA = {
     'municipio': 'str', 'uf': 'str', 'tipo_principal': 'str', 'tipos': ['str'],
