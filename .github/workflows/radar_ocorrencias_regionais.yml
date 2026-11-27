@@ -41,6 +41,7 @@ on:
 
 permissions:
   contents: read
+  actions: read      # ler os artifacts edicao-ok-* (vídeo renderizado = edição concluída)
 
 # Fila por modo: uma execução leve nova não derruba a profunda que espera, e
 # push (só testes) nunca entra na fila.
@@ -84,8 +85,12 @@ jobs:
           CASO: ${{ inputs.caso }}
           MODO_MANUAL: ${{ inputs.modo }}
           CRON: ${{ github.event.schedule }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -o pipefail
+          # edições cujo vídeo ficou pronto (o job de edição publica o artifact edicao-ok-<id>)
+          export RADAR_EDICOES_OK=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            --jq '[.artifacts[] | select(.name|startswith("edicao-ok-")) | .name | ltrimstr("edicao-ok-")] | join(",")' 2>/dev/null || true)
           if [ -n "$CASO" ]; then
             python scripts/rede/radar_regional.py --caso "$CASO" | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
@@ -111,7 +116,8 @@ jobs:
           p = pathlib.Path('output/radar_regional.json')
           d = json.loads(p.read_text()) if p.exists() else {}
           hist = bool(d.get('caso_historico'))
-          fila = [{'arquivo': e['arquivo'], 'canal': e['canal'], 'publicar': bool(e['publicar']) and not hist,
+          fila = [{'id': e.get('id', ''), 'arquivo': e['arquivo'], 'canal': e['canal'],
+                   'publicar': bool(e['publicar']) and not hist,
                    'historico': hist} for e in d.get('edicoes', [])][:4]
           print('edicoes=' + json.dumps(fila))
           print(f'total={len(fila)}')
@@ -187,6 +193,16 @@ jobs:
             output/LEGENDA.txt
             ${{ matrix.item.arquivo }}
           retention-days: 14
+
+      - name: Marcar edição como concluída
+        if: matrix.item.historico != true
+        run: mkdir -p output/ok && echo ok > "output/ok/${{ matrix.item.id }}"
+      - uses: actions/upload-artifact@v4
+        if: matrix.item.historico != true
+        with:
+          name: edicao-ok-${{ matrix.item.id }}
+          path: output/ok
+          retention-days: 3
 
       # Publicação: só com modo=publicacao no config E a ocorrência elegível
       # (confirmada, sem contradição, não duplicada). Entrega o MP4 ao canal,
