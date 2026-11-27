@@ -180,6 +180,8 @@ def decisao_edicao(oid: str, fatos: dict, classif: dict, ocorrencias) -> tuple[b
     novos = fatos_relevantes(fatos) - ocorrencias.fatos_ja_publicados(oid)
     if not classif['elegivel_publicacao']:
         return False, f"não elegível ({classif['status']})", novos
+    if ocorrencias.em_producao(oid):
+        return False, 'em produção: aguardando o vídeo ser renderizado', novos
     if not ocorrencias.fatos_ja_publicados(oid):
         return True, 'primeira edição', novos
     minimo = config.carregar()['editorial']['atualizacao_minima']
