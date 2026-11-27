@@ -57,6 +57,9 @@ jobs:
   radar:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      contents: write     # apagar Releases antigos do radar
+      actions: read
     outputs:
       edicoes: ${{ steps.fila.outputs.edicoes }}
       total: ${{ steps.fila.outputs.total }}
@@ -122,12 +125,24 @@ jobs:
           p = pathlib.Path('output/radar_regional.json')
           d = json.loads(p.read_text()) if p.exists() else {}
           hist = bool(d.get('caso_historico'))
+          import yaml
+          canais = yaml.safe_load(open('scripts/rede/radar.yml', encoding='utf-8'))['canais']
           fila = [{'id': e.get('id', ''), 'arquivo': e['arquivo'], 'canal': e['canal'],
+                   'repo': canais[e['canal']].get('repo') or '', 'handle': canais[e['canal']].get('handle') or '',
                    'publicar': bool(e['publicar']) and not hist,
                    'historico': hist} for e in d.get('edicoes', [])][:4]
           print('edicoes=' + json.dumps(fila))
           print(f'total={len(fila)}')
           EOF
+
+      - name: Limpar Releases do radar com mais de 3 dias
+        if: github.event_name != 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --limit 100 --json tagName,createdAt \
+            --jq '.[] | select(.tagName|startswith("radar-")) | select((now - (.createdAt|fromdateiso8601)) > 259200) | .tagName' \
+            | while read -r t; do gh release delete "$t" --cleanup-tag --yes || true; done
 
       - uses: actions/upload-artifact@v4
         if: always() && github.event_name != 'push'
@@ -142,6 +157,9 @@ jobs:
 
   edicao:
     needs: radar
+    permissions:
+      contents: write     # Release público do MP4 (a Meta baixa de lá)
+      actions: read
     if: needs.radar.outputs.total != '' && needs.radar.outputs.total != '0' && (github.event_name != 'workflow_dispatch' || inputs.renderizar)
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -210,14 +228,28 @@ jobs:
           path: output/ok
           retention-days: 3
 
-      # Publicação: só com modo=publicacao no config E a ocorrência elegível
-      # (confirmada, sem contradição, não duplicada). Entrega o MP4 ao canal,
-      # que publica pelo workflow "Publicar comunicado pronto" dele.
-      - name: Entregar ao canal para publicação
-        if: matrix.item.publicar == true
+      # Entrega ao repositório do canal (workflow publicar_radar.yml de lá).
+      # Sempre entrega quando há token: em simulação o canal só confere conta e
+      # legenda (dry-run). Publica de verdade só com modo=publicacao aqui E a
+      # variável RADAR_PUBLICAR=true no canal. Caso histórico nunca é entregue.
+      - name: Entregar ao canal
+        if: matrix.item.historico != true && matrix.item.repo != ''
         env:
-          GH_TOKEN: ${{ secrets.RADAR_REDE_TOKEN }}
-          CANAL: ${{ matrix.item.canal }}
+          GH_TOKEN: ${{ github.token }}
+          REDE_TOKEN: ${{ secrets.RADAR_REDE_TOKEN }}
+          REPO: ${{ matrix.item.repo }}
+          HANDLE: ${{ matrix.item.handle }}
+          ID: ${{ matrix.item.id }}
+          PUBLICAR: ${{ matrix.item.publicar && 'sim' || 'nao' }}
         run: |
-          test -n "$GH_TOKEN" || { echo "Sem RADAR_REDE_TOKEN: publicação bloqueada."; exit 0; }
-          echo "Entrega automática ainda não habilitada para $CANAL (aguardando aprovação do Pablo)."
+          test -n "$REDE_TOKEN" || { echo "Sem RADAR_REDE_TOKEN: entrega ao canal desligada."; exit 0; }
+          TAG="radar-$ID-$GITHUB_RUN_ID"
+          ARQS="output/REEL.mp4"; [ -f output/CAPA.jpg ] && ARQS="$ARQS output/CAPA.jpg"
+          gh release create "$TAG" $ARQS --title "$TAG" --notes "Edição extraordinária do radar ($ID). Apagada em 3 dias."
+          BASE="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG"
+          CAPA=""; [ -f output/CAPA.jpg ] && CAPA="$BASE/CAPA.jpg"
+          jq -n --arg v "$BASE/REEL.mp4" --arg c "$CAPA" --arg l "$(base64 -w0 output/LEGENDA.txt)" \
+                --arg h "$HANDLE" --arg i "$ID" --arg p "$PUBLICAR" \
+            '{event_type:"radar_edicao", client_payload:{video_url:$v, capa_url:$c, legenda_b64:$l, handle:$h, id:$i, publicar:$p}}' \
+            | GH_TOKEN="$REDE_TOKEN" gh api "repos/$REPO/dispatches" --input -
+          echo "Entregue a $REPO (@$HANDLE), publicar=$PUBLICAR" >> "$GITHUB_STEP_SUMMARY"
