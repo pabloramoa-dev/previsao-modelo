@@ -75,3 +75,14 @@ def test_destino_ocupado_e_recusado(tmp_path):
     (tmp_path / 'algo').write_text('x')
     with pytest.raises(SystemExit, match='vazio'):
         novo.gerar('PR', tmp_path, REDE)
+
+def test_cobertura_integral_ba(gerados):
+    destino = gerados['BA']
+    est = yaml.safe_load((destino / 'config/estado.yaml').read_text())
+    locais = yaml.safe_load((destino / 'config/locais.yaml').read_text())
+    assert len(est['territorios']) == 27
+    assert len(est['regioes_editoriais']) == 15
+    ids = [i for t in est['territorios'] for i in t['ids']]
+    assert len(ids) == len(set(ids)) == 417
+    assert set(ids) == {l['id'] for l in locais['locations']}
+    assert set(ids) == {i for r in est['regioes'] for i in r['ids']}

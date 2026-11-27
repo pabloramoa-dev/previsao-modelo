@@ -52,7 +52,7 @@ canais:
   previsao-pr:             {uf: PR, handle: previsaopr,    repo: pabloramoa-dev/previsao-pr}
   previsaomg:              {uf: MG, handle: previsaomg,    repo: pabloramoa-dev/previsaomg}
   previsao-bsb:            {uf: DF, handle: previsaobsb,   repo: pabloramoa-dev/previsao-bsb}
-  previsaobahia:           {uf: BA, handle: previsaobahia, repo: null, ativo: false}   # repositório ainda não encontrado
+  previsaobahia:           {uf: BA, handle: previsaobahia, repo: null, ativo: true}    # monitoramento e edição em simulação; sem publicação
 
 # @previsaovr: coberto pelo @previsaosulflu (mesmo recorte). Não monitora em
 # duplicidade; reative aqui só se o perfil voltar a ter repositório próprio.

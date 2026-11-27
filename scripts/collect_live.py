@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument("--previous", help="snapshot anterior, para consistencia temporal")
     args = parser.parse_args()
 
-    locations = config.locations_by_tier(args.tier)
+    locations = config.amostra_territorial() if args.tier == 1 else config.locations_by_tier(args.tier)
     if not locations:
         raise SystemExit(f"nenhum local no tier {args.tier}")
 

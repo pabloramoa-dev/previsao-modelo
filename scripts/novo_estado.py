@@ -41,6 +41,7 @@ IGNORAR_CAMINHOS = {Path('scripts/rede'), Path('scripts/novo_estado.py'),
                     Path('tests/test_novo_estado.py'), Path('README.md'),
                     # radar de ocorrências: central, roda só no modelo
                     Path('.github/workflows/radar_ocorrencias_regionais.yml'),
+                    Path('.github/workflows/monitor_defesa_civil_brasil.yml'),
                     Path('tests/test_radar.py'), Path('tests/fixtures/radar')}
 
 # Canais que já existem fora da rede gerada aqui.
@@ -159,6 +160,9 @@ def montar_estado(uf: str, e: dict, rede: dict, cad: dict[str, dict]) -> dict:
         'falado': {},
         'preposicoes': preps,
         'destaques_semana': [],
+        **({'rotacao_territorial': True,
+            'territorios': [{'nome': t['nome'], 'ids': [slug(n) for n in t['municipios']]} for t in e['territorios']],
+            'regioes_editoriais': e['regioes_editoriais']} if e.get('rotacao_territorial') else {}),
     }
 
 
@@ -303,6 +307,11 @@ def gerar(uf: str, destino: Path, rede: dict | None = None, sincronizar: bool = 
     if faltam:
         raise SystemExit(f'{uf}: municípios fora do cadastro do IBGE: {faltam}')
 
+    if e.get('rotacao_territorial'):
+        nomes = [n for t in e['territorios'] for n in t['municipios']]
+        quadro = [n for r in e['regioes'] for n in [r['ancora'], *r['reservas']]]
+        if len(nomes) != len(set(nomes)) or set(nomes) != set(cad) or sorted(nomes) != sorted(quadro):
+            raise SystemExit('Cobertura territorial incompleta ou duplicada')
     copiar_modelo(destino)
     est = montar_estado(uf, e, rede, cad)
     minuto = horario(rede, e)

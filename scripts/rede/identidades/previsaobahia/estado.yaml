@@ -1,0 +1,93 @@
+{
+  "versao": 1,
+  "uf": "BA",
+  "nome": "Bahia",
+  "curto": "Bahia",
+  "artigo": "a",
+  "regiao_id": "estado_ba",
+  "marca": "PREVISÃO BAHIA",
+  "marca_falada": "Previsão Bahia",
+  "handle": "previsaobahia",
+  "slogan": "O tempo da Bahia para decidir seu dia.",
+  "repo": "pabloramoa-dev/previsaobahia",
+  "fuso_utc": -3,
+  "timezone": "America/Bahia",
+  "recorte": {
+    "lat_min": -19,
+    "lat_max": -8,
+    "lon_min": -47,
+    "lon_max": -37
+  },
+  "litoral": true,
+  "cenario": "litoral",
+  "ticker": "BAHIA",
+  "titulos": {
+    "antes_de_sair": "BAHIA ANTES DE SAIR",
+    "amanha_no_estado": "AMANHÃ NA BAHIA"
+  },
+  "apresentadores": {
+    "bira": {
+      "cargo": "TEMPO NA BAHIA"
+    },
+    "bia": {
+      "cargo": "O TEMPO DE AMANHÃ NA BAHIA"
+    }
+  },
+  "hashtags": {
+    "padrao": "#PrevisaoBahia #Bahia #TempoBA"
+  },
+  "legenda": {
+    "abrangencia": "na Bahia",
+    "unidade": "cidade"
+  },
+  "regioes": [
+    {
+      "rotulo": "Litoral Norte",
+      "ids": [
+        "salvador"
+      ],
+      "zonas": []
+    },
+    {
+      "rotulo": "Feira e Recôncavo",
+      "ids": [
+        "feira_de_santana"
+      ],
+      "zonas": []
+    },
+    {
+      "rotulo": "Litoral Sul",
+      "ids": [
+        "ilheus"
+      ],
+      "zonas": []
+    },
+    {
+      "rotulo": "Sudoeste e Chapada",
+      "ids": [
+        "vitoria_da_conquista"
+      ],
+      "zonas": []
+    },
+    {
+      "rotulo": "Oeste",
+      "ids": [
+        "barreiras"
+      ],
+      "zonas": []
+    },
+    {
+      "rotulo": "Norte e Sertão",
+      "ids": [
+        "juazeiro"
+      ],
+      "zonas": []
+    }
+  ],
+  "preposicoes": {
+    "na": [
+      "Bahia"
+    ]
+  },
+  "destaques_semana": []
+}

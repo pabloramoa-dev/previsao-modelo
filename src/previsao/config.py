@@ -151,3 +151,30 @@ def source(name: str) -> dict[str, Any]:
 
 def forbidden_weather_sources() -> set[str]:
     return set(load_sources().get("forbidden_weather_sources") or [])
+
+def indice_rotacao() -> int:
+    """Dois turnos por dia; data local e índice determinístico."""
+    from datetime import datetime
+    import os
+    agora = datetime.now(estado.fuso())
+    turno = int(os.environ.get("PREVISAO_HORA_ALVO", agora.hour))
+    return agora.date().toordinal() * 2 + int(turno >= 12)
+
+
+def rotacao_editorial() -> dict[str, str]:
+    if not estado.carregar().get("rotacao_territorial"):
+        return {}
+    i = indice_rotacao()
+    return {rotulo: ids[i % len(ids)] for rotulo, ids, _ in estado.regioes()}
+
+
+def amostra_territorial() -> list[dict[str, Any]]:
+    """Uma sede de cada território, mais as seis cidades do quadro e âncoras."""
+    d = estado.carregar()
+    if not d.get("rotacao_territorial"):
+        return locations_by_tier(1)
+    i = indice_rotacao()
+    ids = set(rotacao_editorial().values())
+    ids.update(t["ids"][i % len(t["ids"])] for t in d["territorios"])
+    ids.update(l["id"] for l in locations_by_tier(1))
+    return [l for l in locations_by_tier(2) if l["id"] in ids]
