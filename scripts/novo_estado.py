@@ -38,7 +38,10 @@ DONO = 'pabloramoa-dev'
 IGNORAR = {'.git', 'node_modules', '__pycache__', '.pytest_cache', 'output', 'build',
            'renders', 'snapshots'}
 IGNORAR_CAMINHOS = {Path('scripts/rede'), Path('scripts/novo_estado.py'),
-                    Path('tests/test_novo_estado.py'), Path('README.md')}
+                    Path('tests/test_novo_estado.py'), Path('README.md'),
+                    # radar de ocorrências: central, roda só no modelo
+                    Path('.github/workflows/radar_ocorrencias_regionais.yml'),
+                    Path('tests/test_radar.py'), Path('tests/fixtures/radar')}
 
 # Canais que já existem fora da rede gerada aqui.
 CANAIS_EXISTENTES = ['previsaorj', 'previsao-rj', 'otemposp', 'previsaobsb', 'previsao-bsb',
