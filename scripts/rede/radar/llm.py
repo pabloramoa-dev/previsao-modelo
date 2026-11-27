@@ -62,7 +62,9 @@ def modelos_gratuitos(cache: armazem.Cache) -> list[str]:
     for m in dados:
         p = m.get('pricing') or {}
         try:
-            gratis = all(float(p.get(k, '1') or 0) == 0 for k in ('prompt', 'completion', 'request'))
+            # prompt e completion têm de vir com preço 0; os demais itens, se vierem, também
+            gratis = ('prompt' in p and 'completion' in p
+                      and all(float(v or 0) == 0 for k, v in p.items() if k in ('prompt', 'completion', 'request')))
         except ValueError:
             gratis = False
         if str(m.get('id', '')).endswith(':free') and gratis and (m.get('context_length') or 0) >= 16000:
