@@ -99,16 +99,18 @@ estados:
     curto: "Bahia"
     artigo: "a"
     titulo: "BAHIA"
-    grupo: B
+    handle: previsaobahia
+    repo: previsaobahia
+    grupo: A
     litoral: true
     cenario: litoral
     regioes:
-      - {rotulo: "Salvador", ancora: "Salvador", reservas: ["Lauro de Freitas", "Camaçari"]}
-      - {rotulo: "Feira e Recôncavo", ancora: "Feira de Santana", reservas: ["Santo Antônio de Jesus", "Cruz das Almas"]}
-      - {rotulo: "Sul", ancora: "Ilhéus", reservas: ["Itabuna", "Porto Seguro"]}
-      - {rotulo: "Sudoeste", ancora: "Vitória da Conquista", reservas: ["Jequié"]}
-      - {rotulo: "Oeste", ancora: "Barreiras", reservas: ["Luís Eduardo Magalhães"]}
-      - {rotulo: "Norte", ancora: "Juazeiro", reservas: ["Paulo Afonso", "Senhor do Bonfim"]}
+      - {rotulo: "Litoral Norte", ancora: "Salvador", reservas: ["Lauro de Freitas", "Camaçari", "Mata de São João", "Entre Rios", "Conde", "Alagoinhas"]}
+      - {rotulo: "Feira e Recôncavo", ancora: "Feira de Santana", reservas: ["Santo Antônio de Jesus", "Cruz das Almas", "Cachoeira", "Santo Amaro", "Serrinha", "Itaberaba"]}
+      - {rotulo: "Litoral Sul", ancora: "Ilhéus", reservas: ["Itabuna", "Valença", "Camamu", "Itacaré", "Porto Seguro", "Eunápolis", "Teixeira de Freitas", "Caravelas", "Prado"]}
+      - {rotulo: "Sudoeste e Chapada", ancora: "Vitória da Conquista", reservas: ["Jequié", "Brumado", "Livramento de Nossa Senhora", "Lençóis", "Mucugê", "Seabra", "Piatã", "Rio de Contas"]}
+      - {rotulo: "Oeste", ancora: "Barreiras", reservas: ["Luís Eduardo Magalhães", "São Desidério", "Correntina", "Santa Maria da Vitória", "Bom Jesus da Lapa", "Guanambi", "Ibotirama"]}
+      - {rotulo: "Norte e Sertão", ancora: "Juazeiro", reservas: ["Paulo Afonso", "Senhor do Bonfim", "Jacobina", "Irecê", "Xique-Xique", "Euclides da Cunha", "Ribeira do Pombal", "Casa Nova", "Canudos"]}
   SE:
     nome: "Sergipe"
     curto: "Sergipe"
