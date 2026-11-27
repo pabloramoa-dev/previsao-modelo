@@ -99,3 +99,15 @@ def test_modo_variavel_so_restringe(monkeypatch):
     assert config.modo() == config.carregar()['modo']      # env não libera publicação
     monkeypatch.setenv('RADAR_MODO', 'simulacao')
     assert config.modo() == 'simulacao'
+
+
+def test_negacao_nao_vira_ocorrencia(estado_tmp):
+    """Angra dos Reis, 26/11/2026: muita chuva, mas a Defesa Civil disse que NÃO houve transbordamento."""
+    from radar import extracao, roteiro
+    ev = [{'titulo': 'Angra dos Reis registra maior volume de chuva no estado',
+           'trecho': 'Acumulado passou de 180 mm. A Defesa Civil municipal não registrou transbordamento '
+                     'de rios ou deslizamentos de terra, foram alagamentos pontuais.'}]
+    f = extracao.extrair('Angra dos Reis', 'RJ', ev)
+    assert 'transbordamento' not in f['tipos'] and 'deslizamento' not in f['tipos']
+    assert f['situacao'] != 'ocorrencia_confirmada'
+    assert roteiro.tipo_principal({'tipos': ['transbordamento', 'alagamento']}) == 'alagamento'
