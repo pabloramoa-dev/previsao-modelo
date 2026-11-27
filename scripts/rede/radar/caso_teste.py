@@ -9,6 +9,7 @@ controle de cota (Tavily simulado conta crédito) e bloqueio de duplicidade
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -52,6 +53,7 @@ class FontesDoCaso:
 
 
 def rodar(caminho: str, saida: Path = Path('output/caso_teste')) -> dict:
+    os.environ['RADAR_MODO'] = 'simulacao'   # caso histórico nunca publica, nem com o radar em publicação
     caso = json.loads(Path(caminho).read_text(encoding='utf-8'))
     agora = datetime.fromisoformat(caso['agora'])
     cache = armazem.Cache()
