@@ -174,7 +174,7 @@ jobs:
           EXTRA=""; [ "$HISTORICO" = "true" ] && EXTRA="--ignorar-validade"   # caso de teste: nunca publica
           python hyperframes/comunicado_dupla.py "$ROTEIRO" --so-validar $EXTRA
           python hyperframes/comunicado_dupla.py "$ROTEIRO" --out output/REEL.mp4 $EXTRA
-          python scripts/qa_video.py output/REEL.mp4
+          QA_DUR_MIN=40 QA_DUR_MAX=80 python scripts/qa_video.py output/REEL.mp4   # alvo 45-75 s
           { echo "## Roteiro"; echo '```'; cat output/work_comunicado/roteiro.txt; echo '```';
             echo "## Legenda"; echo '```'; cat output/LEGENDA.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
