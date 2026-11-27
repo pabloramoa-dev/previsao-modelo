@@ -4,7 +4,7 @@ from __future__ import annotations
 import importlib
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -25,7 +25,7 @@ def test_self_test(estado_tmp):
     rr.self_test()
 
 
-def test_caso_barra_mansa_e_duplicidade(estado_tmp):
+def test_caso_barra_mansa_e_duplicidade(estado_tmp, monkeypatch):
     from radar import caso_teste
     rel, esperado, src = caso_teste.rodar(str(CASO), estado_tmp / 'out')
     assert caso_teste.conferir(rel, esperado) == []
@@ -36,11 +36,27 @@ def test_caso_barra_mansa_e_duplicidade(estado_tmp):
     assert 'Nova Esperança' in yaml_txt and 'Bananal' in yaml_txt
     assert 'api_key' not in yaml_txt.casefold() and 'ignore' not in yaml_txt.casefold()
     assert '87' not in yaml_txt          # chuva de Resende não pode virar a de Barra Mansa
-    # segunda rodada: mesma ocorrência, sem fato novo -> sem nova edição e sem gastar Tavily (cache)
+    oid = rel['edicoes'][0]['id']
+    # enquanto o vídeo não fica pronto: não repete a edição
     rel2, _, src2 = caso_teste.rodar(str(CASO), estado_tmp / 'out2')
-    assert rel2['edicoes'] == []
-    assert src2.consultas_tavily == 0
-    assert 'duplicada' in rel2['investigados'][0]['edicao']['motivo']
+    assert rel2['edicoes'] == [] and 'em produção' in rel2['investigados'][0]['edicao']['motivo']
+    assert src2.consultas_tavily == 0                      # cache: sem gastar Tavily de novo
+    # vídeo renderizado (artifact edicao-ok-<id>): passa a contar; sem fato novo -> duplicada
+    monkeypatch.setenv('RADAR_EDICOES_OK', oid)
+    rel3, _, _ = caso_teste.rodar(str(CASO), estado_tmp / 'out3')
+    assert rel3['pendencias_resolvidas']['confirmadas'] == [oid]
+    assert rel3['edicoes'] == [] and 'duplicada' in rel3['investigados'][0]['edicao']['motivo']
+
+
+def test_render_que_falhou_nao_trava_a_ocorrencia(estado_tmp):
+    from radar import armazem
+    agora = datetime.fromisoformat('2026-11-26T14:00:00-03:00')
+    oc = armazem.Ocorrencias()
+    oc.registrar_pendente('x-enchente-2026-11-26', {'tipo:enchente'}, 'a.yaml', agora.isoformat())
+    assert oc.em_producao('x-enchente-2026-11-26')
+    res = oc.resolver_pendentes(agora + timedelta(hours=4), set())
+    assert res['vencidas'] == ['x-enchente-2026-11-26'] and not oc.em_producao('x-enchente-2026-11-26')
+    assert not oc.fatos_ja_publicados('x-enchente-2026-11-26')      # pode gerar de novo
 
 
 def test_noticia_antiga_e_fora_do_municipio(estado_tmp):
