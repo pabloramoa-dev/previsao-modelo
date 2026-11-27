@@ -14,6 +14,7 @@ Fluxo de uma investigação (do mais barato para o mais caro):
 from __future__ import annotations
 
 import json
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -182,6 +183,9 @@ def executar(modo: str, agora: datetime | None = None, src=None, saida: Path = P
     ocorrencias = ocorrencias or armazem.Ocorrencias()
     src = src or FontesAoVivo(cache, agora)
     monitorados = config.municipios_monitorados()
+    # edições renderizadas com sucesso desde a última execução (vem do workflow)
+    confirmadas = {x.strip() for x in os.environ.get('RADAR_EDICOES_OK', '').split(',') if x.strip()}
+    pendencias = ocorrencias.resolver_pendentes(agora, confirmadas)
 
     alertas = src.alertas_defesa_civil() + src.alertas_inmet()
     chuvas, info_chuva, regionais = [], {}, []
@@ -244,9 +248,9 @@ def executar(modo: str, agora: datetime | None = None, src=None, saida: Path = P
             rot = roteiro.montar(c, r['fatos'], r['evidencias'], agora, canal)
             arq = saida / 'radar' / oid / 'comunicado.yaml'
             roteiro.gravar(rot, arq)
-            r['edicao'].update(arquivo=str(arq), canal=c['canal'], duracao_estimada_s=rot['_radar']['duracao_estimada_s'],
+            r['edicao'].update(id=oid, arquivo=str(arq), canal=c['canal'], duracao_estimada_s=rot['_radar']['duracao_estimada_s'],
                                publicar=config.modo() == 'publicacao' and bool(canal.get('repo')) and r['classificacao']['elegivel_publicacao'])
-            ocorrencias.registrar_edicao(oid, novos, str(arq), agora.isoformat())
+            ocorrencias.registrar_pendente(oid, novos, str(arq), agora.isoformat())
             edicoes.append(r['edicao'])
 
     ocorrencias.encerrar_antigas(agora)
@@ -260,6 +264,7 @@ def executar(modo: str, agora: datetime | None = None, src=None, saida: Path = P
         'cotas': cotas.resumo(), 'cache_acertos': cache.acertos,
         'erros_de_fonte': getattr(src, 'erros', []),
         'ocorrencias_em_andamento': ocorrencias.d['ativas'],
+        'edicoes_pendentes': sorted(ocorrencias.d.get('pendentes', {})), 'pendencias_resolvidas': pendencias,
     }
     saida.mkdir(parents=True, exist_ok=True)
     (saida / 'radar_regional.json').write_text(json.dumps(relatorio, ensure_ascii=False, indent=2, default=str), encoding='utf-8')
