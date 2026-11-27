@@ -42,8 +42,10 @@ on:
 permissions:
   contents: read
 
+# Fila por modo: uma execução leve nova não derruba a profunda que espera, e
+# push (só testes) nunca entra na fila.
 concurrency:
-  group: radar-regional
+  group: radar-${{ github.event_name == 'push' && github.run_id || (github.event.schedule == '*/15 * * * *' && 'leve' || 'profunda') }}
   cancel-in-progress: false
 
 jobs:
