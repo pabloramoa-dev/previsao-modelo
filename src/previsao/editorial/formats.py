@@ -18,6 +18,27 @@ class _Titulos(dict):
     def get(self, chave, padrao=None):
         return estado.titulos().get(chave, padrao)
 
+    # O dict herdado fica vazio; tudo delega ao estado. Sem isto, `in`,
+    # iteração e `argparse(choices=TITLES)` enxergavam zero formatos e o
+    # gerar_hf.py recusava qualquer --format (ex.: chove_onde).
+    def __contains__(self, chave):
+        return chave in estado.titulos()
+
+    def __iter__(self):
+        return iter(estado.titulos())
+
+    def __len__(self):
+        return len(estado.titulos())
+
+    def keys(self):
+        return estado.titulos().keys()
+
+    def items(self):
+        return estado.titulos().items()
+
+    def values(self):
+        return estado.titulos().values()
+
 
 TITLES = _Titulos()
 
