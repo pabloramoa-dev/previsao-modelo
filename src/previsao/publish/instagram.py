@@ -19,7 +19,12 @@ def _cfg():
 
 def base_url(version: str) -> str:
     # Centralizado para permitir regressão controlada de versão/host.
-    return f"https://graph.instagram.com/{version}"
+    # Token do "Login do Instagram" (IGAA…) só vale em graph.instagram.com;
+    # token do Login do Facebook para Empresas/usuário do sistema (EAA…) só
+    # vale em graph.facebook.com. O host acompanha o tipo do token configurado.
+    token = os.environ.get("IG_ACCESS_TOKEN") or ""
+    host = "graph.instagram.com" if token.startswith("IG") else "graph.facebook.com"
+    return f"https://{host}/{version}"
 
 
 def verify_destination() -> dict:

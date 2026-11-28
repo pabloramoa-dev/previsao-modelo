@@ -19,6 +19,15 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Só tokens do Login do Instagram (IGAA…) expiram em 60 dias e são
+          # renovados aqui. Token de usuário do sistema (EAA…) não expira.
+          case "${IG_ACCESS_TOKEN}" in
+            IG*) ;;
+            *) echo "Token não é do Login do Instagram (não expira); nada a renovar."
+               echo "- Token não expira; renovação não necessária." >> "$GITHUB_STEP_SUMMARY"
+               exit 0 ;;
+          esac
+
           resp=$(curl -sS -G "https://graph.instagram.com/refresh_access_token" \
             --data-urlencode "grant_type=ig_refresh_token" \
             --data-urlencode "access_token=${IG_ACCESS_TOKEN}")
